@@ -1,11 +1,14 @@
 .pixi/
 models/
 SenseVoice.cpp/build/
-test_voice_clips/
 __pycache__/
 *.pyc
 .DS_Store
+# Local test audio — keep one benchmark clip in repo
+test_voice_clips/*
+!test_voice_clips/sunflower.mp3
 *.mp3
+!test_voice_clips/sunflower.mp3
 *.wav
 *.aac
 fbank_lfr_cmvn_feature.json

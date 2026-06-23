@@ -12,6 +12,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_CLIP = ROOT / "test_voice_clips" / "sunflower.mp3"
 DEFAULT_CLIPS = ROOT / "test_voice_clips"
 DEFAULT_REPORT = ROOT / "reports" / "voice_llm_benchmark.md"
 DEFAULT_MODEL = "qwen3:1.7b"
@@ -191,7 +192,18 @@ def generate_by_chunk(model: str, chunks: list[str], prompt_builder) -> tuple[st
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--clips", type=Path, default=DEFAULT_CLIPS)
+    parser.add_argument(
+        "--clips",
+        type=Path,
+        default=None,
+        help="Directory of audio files (default: test_voice_clips/)",
+    )
+    parser.add_argument(
+        "--clip",
+        type=Path,
+        default=DEFAULT_CLIP,
+        help="Single benchmark audio file (used when --clips is not set)",
+    )
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT)
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--language", default="zh", help="ASR language (default: zh)")
@@ -200,9 +212,11 @@ def main() -> None:
 
     audio_files = sorted(
         p for p in args.clips.iterdir() if p.suffix.lower() in {".mp3", ".aac", ".wav", ".m4a", ".flac"}
-    )
+    ) if args.clips else [args.clip]
     if not audio_files:
-        raise SystemExit(f"No audio files found in {args.clips}")
+        raise SystemExit(f"No audio files found in {args.clips or args.clip.parent}")
+    if not args.clips and not args.clip.is_file():
+        raise SystemExit(f"Benchmark clip not found: {args.clip}")
 
     args.report.parent.mkdir(parents=True, exist_ok=True)
     rows: list[dict[str, object]] = []
@@ -255,7 +269,10 @@ def main() -> None:
     lines.append(f"- ASR language: `{args.language}`")
     lines.append(f"- Local LLM: `{args.model}` via Ollama local API")
     lines.append(f"- LLM chunk size: {args.chunk_chars} chars")
-    lines.append(f"- Source directory: `{args.clips}`")
+    if args.clips:
+        lines.append(f"- Source directory: `{args.clips}`")
+    else:
+        lines.append(f"- Benchmark clip: `{args.clip}`")
     lines.append("")
     lines.append("## Summary")
     lines.append("")
