@@ -1,0 +1,19 @@
+[workspace]
+name = "sense-voice"
+version = "0.1.0"
+description = "Local SenseVoice.cpp deployment with Metal acceleration"
+channels = ["conda-forge"]
+platforms = ["osx-arm64"]
+
+[dependencies]
+cmake = ">=3.12"
+cxx-compiler = "*"
+python = "3.12.*"
+huggingface_hub = ">=0.20"
+ffmpeg = "*"
+
+[tasks]
+build = { cmd = "bash scripts/build.sh", description = "Build SenseVoice.cpp with Metal" }
+download-model = { cmd = "python scripts/download_model.py", description = "Download GGUF model and sample audio" }
+test = { cmd = "python scripts/test_transcribe.py", description = "Run sample transcription" }
+sv = { cmd = "python scripts/sv.py", description = "Transcribe audio file to text" }

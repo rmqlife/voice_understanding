@@ -1,0 +1,11 @@
+.pixi/
+models/
+SenseVoice.cpp/build/
+test_voice_clips/
+__pycache__/
+*.pyc
+.DS_Store
+*.mp3
+*.wav
+*.aac
+fbank_lfr_cmvn_feature.json
