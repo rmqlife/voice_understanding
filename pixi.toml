@@ -1,19 +1,23 @@
 [workspace]
 name = "sense-voice"
 version = "0.1.0"
-description = "Local SenseVoice.cpp deployment with Metal acceleration"
+description = "Local SenseVoice deployment with SenseVoice.cpp and official FunASR backends"
 channels = ["conda-forge"]
-platforms = ["osx-arm64"]
+platforms = ["osx-arm64", "linux-64"]
 
 [dependencies]
 cmake = ">=3.12"
 cxx-compiler = "*"
-python = "3.12.*"
+python = "3.10.*"
+pip = "*"
 huggingface_hub = ">=0.20"
 ffmpeg = "*"
 
 [tasks]
-build = { cmd = "bash scripts/build.sh", description = "Build SenseVoice.cpp with Metal" }
+build = { cmd = "bash scripts/build.sh", description = "Build SenseVoice.cpp with platform GPU acceleration" }
 download-model = { cmd = "python scripts/download_model.py", description = "Download GGUF model and sample audio" }
 test = { cmd = "python scripts/test_transcribe.py", description = "Run sample transcription" }
 sv = { cmd = "python scripts/sv.py", description = "Transcribe audio file to text" }
+install-gpu = { cmd = "python -m pip install --upgrade pip && python -m pip install torch==2.3.0+cu121 torchaudio==2.3.0+cu121 --index-url https://download.pytorch.org/whl/cu121 && python -m pip install -i https://mirrors.aliyun.com/pypi/simple --trusted-host mirrors.aliyun.com modelscope huggingface 'huggingface_hub<1.0' 'funasr>=1.1.3' 'numpy<=1.26.4' 'transformers<5'", description = "Install official SenseVoice/FunASR CUDA dependencies" }
+benchmark = { cmd = "python scripts/benchmark_voice_llm.py", description = "Run voice + local LLM benchmark" }
+extract-audio = { cmd = "python scripts/extract_audio.py", description = "Extract 16 kHz mono WAV from media files" }

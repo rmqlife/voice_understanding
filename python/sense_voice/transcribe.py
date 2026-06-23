@@ -1,17 +1,21 @@
-"""Python wrapper around the sense-voice-main CLI binary."""
+"""Python wrappers for local SenseVoice backends."""
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import subprocess
+import sys
 import time
+from contextlib import redirect_stdout
 from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_BIN = ROOT / "SenseVoice.cpp" / "build" / "bin" / "sense-voice-main"
 DEFAULT_MODEL = ROOT / "models" / "sense-voice-small-fp16.gguf"
+DEFAULT_OFFICIAL_MODEL = "iic/SenseVoiceSmall"
 
 TAG_PATTERN = re.compile(r"<\|[^|]+\|>")
 TIMESTAMP_PATTERN = re.compile(r"^\[[\d.\-]+\]\s*")
@@ -90,7 +94,12 @@ class TranscriptionResult:
 
 
 class SenseVoice:
-    """Local SenseVoice speech recognition via the C++ binary."""
+    """Local SenseVoice speech recognition.
+
+    Backends:
+    - cpp: SenseVoice.cpp GGUF binary, useful for macOS/Metal.
+    - official: FunASR AutoModel, useful for CUDA GPU environments.
+    """
 
     def __init__(
         self,
@@ -100,10 +109,23 @@ class SenseVoice:
         use_gpu: bool = True,
         language: str = "auto",
         use_itn: bool = True,
+        backend: str | None = None,
+        device: str | None = None,
+        vad_model: str = "fsmn-vad",
+        disable_update: bool = True,
     ) -> None:
-        self.model_path = Path(
-            model_path or os.environ.get("SENSE_VOICE_MODEL", DEFAULT_MODEL)
+        self.backend = (backend or os.environ.get("SENSE_VOICE_BACKEND", "cpp")).lower()
+        if self.backend in {"cxx", "sensevoice.cpp", "sense-voice.cpp"}:
+            self.backend = "cpp"
+        if self.backend in {"funasr", "python"}:
+            self.backend = "official"
+        if self.backend not in {"cpp", "official"}:
+            raise ValueError("backend must be 'cpp' or 'official'")
+
+        default_model = (
+            DEFAULT_OFFICIAL_MODEL if self.backend == "official" else DEFAULT_MODEL
         )
+        self.model_path = model_path or os.environ.get("SENSE_VOICE_MODEL", default_model)
         self.bin_path = Path(
             bin_path or os.environ.get("SENSE_VOICE_BIN", DEFAULT_BIN)
         )
@@ -111,23 +133,30 @@ class SenseVoice:
         self.use_gpu = use_gpu
         self.language = language
         self.use_itn = use_itn
+        self.device = device or os.environ.get(
+            "SENSE_VOICE_DEVICE", "cuda:0" if use_gpu else "cpu"
+        )
+        self.vad_model = vad_model
+        self.disable_update = disable_update
+        self._official_model = None
 
-    def _build_cmd(self, audio_path: str | Path) -> list[str]:
+    def _build_cpp_cmd(self, audio_path: str | Path) -> list[str]:
         if not self.bin_path.is_file():
             raise FileNotFoundError(
                 f"sense-voice-main not found at {self.bin_path}. "
                 "Run: pixi run build"
             )
-        if not self.model_path.is_file():
+        model_path = Path(self.model_path)
+        if not model_path.is_file():
             raise FileNotFoundError(
-                f"Model not found at {self.model_path}. "
+                f"Model not found at {model_path}. "
                 "Run: pixi run download-model"
             )
 
         cmd = [
             str(self.bin_path),
             "-m",
-            str(self.model_path),
+            str(model_path),
             "-t",
             str(self.threads),
             "-l",
@@ -141,18 +170,40 @@ class SenseVoice:
         cmd.append(str(audio_path))
         return cmd
 
-    def transcribe(
+    def _load_official_model(self):
+        if self._official_model is not None:
+            return self._official_model
+
+        try:
+            from funasr import AutoModel
+        except ImportError as exc:
+            raise RuntimeError(
+                "The official SenseVoice backend requires FunASR. "
+                "Run: pixi run install-gpu"
+            ) from exc
+
+        with redirect_stdout(sys.stderr):
+            self._official_model = AutoModel(
+                model=str(self.model_path),
+                trust_remote_code=False,
+                vad_model=self.vad_model,
+                vad_kwargs={"max_single_segment_time": 30000},
+                device=self.device,
+                disable_update=self.disable_update,
+            )
+        return self._official_model
+
+    def _transcribe_cpp(
         self,
         audio_path: str | Path,
         *,
-        raw: bool = False,
-        with_timestamps: bool = True,
+        raw: bool,
+        with_timestamps: bool,
+        audio_seconds: float,
+        started: float,
     ) -> str | TranscriptionResult:
-        """Transcribe a WAV file. Returns plain text by default."""
-        audio_seconds = get_audio_duration(audio_path)
-        started = time.perf_counter()
         result = subprocess.run(
-            self._build_cmd(audio_path),
+            self._build_cpp_cmd(audio_path),
             capture_output=True,
             text=True,
             check=False,
@@ -166,7 +217,6 @@ class SenseVoice:
 
         clean = parse_transcript(result.stdout, with_timestamps=with_timestamps)
         raw_text = result.stdout.strip()
-
         if raw:
             return TranscriptionResult(
                 raw=raw_text,
@@ -175,3 +225,71 @@ class SenseVoice:
                 process_seconds=process_seconds,
             )
         return clean
+
+    def _transcribe_official(
+        self,
+        audio_path: str | Path,
+        *,
+        raw: bool,
+        audio_seconds: float,
+        started: float,
+    ) -> str | TranscriptionResult:
+        model = self._load_official_model()
+        with redirect_stdout(sys.stderr):
+            result = model.generate(
+                input=str(audio_path),
+                cache={},
+                language=self.language,
+                use_itn=self.use_itn,
+                batch_size_s=60,
+                merge_vad=True,
+                merge_length_s=15,
+            )
+        process_seconds = time.perf_counter() - started
+
+        texts: list[str] = []
+        for item in result:
+            if isinstance(item, dict):
+                texts.append(str(item.get("text", "")))
+        clean = "\n".join(text for text in texts if text).strip()
+        try:
+            from funasr.utils.postprocess_utils import rich_transcription_postprocess
+
+            clean = rich_transcription_postprocess(clean)
+        except Exception:
+            clean = strip_tags(clean)
+
+        raw_text = json.dumps(result, ensure_ascii=False, default=str)
+        if raw:
+            return TranscriptionResult(
+                raw=raw_text,
+                text=clean,
+                audio_seconds=audio_seconds,
+                process_seconds=process_seconds,
+            )
+        return clean
+
+    def transcribe(
+        self,
+        audio_path: str | Path,
+        *,
+        raw: bool = False,
+        with_timestamps: bool = True,
+    ) -> str | TranscriptionResult:
+        """Transcribe an audio file. Returns plain text by default."""
+        audio_seconds = get_audio_duration(audio_path)
+        started = time.perf_counter()
+        if self.backend == "official":
+            return self._transcribe_official(
+                audio_path,
+                raw=raw,
+                audio_seconds=audio_seconds,
+                started=started,
+            )
+        return self._transcribe_cpp(
+            audio_path,
+            raw=raw,
+            with_timestamps=with_timestamps,
+            audio_seconds=audio_seconds,
+            started=started,
+        )
