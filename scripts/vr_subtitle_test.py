@@ -10,29 +10,16 @@ from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "python"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 import benchmark_voice_llm as bvl  # noqa: E402
+from sense_voice.subtitle import build_asr_srt_entries, build_zh_srt_entries  # noqa: E402
+from sense_voice.srt import write_srt  # noqa: E402
 
 
 DEFAULT_SRT_DIR = ROOT / "reports" / "srt"
 DEFAULT_REPORT = ROOT / "reports" / "vr_subtitle_test_metrics.md"
-
-
-def segments_to_srt_entries(segments: list[dict[str, object]]) -> list[tuple[float, float, str]]:
-    entries: list[tuple[float, float, str]] = []
-    for segment in segments:
-        start = segment.get("start")
-        end = segment.get("end")
-        text = str(segment.get("text", "")).strip()
-        if start is None or end is None or not text:
-            continue
-        start_f = float(start)
-        end_f = float(end)
-        if end_f <= start_f:
-            continue
-        entries.append((start_f, end_f, text))
-    return entries
 
 
 def render_metrics_report(rows: list[dict[str, object]], *, run_label: str) -> str:
@@ -44,19 +31,20 @@ def render_metrics_report(rows: list[dict[str, object]], *, run_label: str) -> s
         "",
         "## Summary",
         "",
-        "| Clip | Audio s | ASR s | ASR RTF | Segments | Timing | p50 | p95 | max | >10s | >30s | LLM s | ASR SRT | ZH SRT | SRT entries |",
-        "|---|---:|---:|---:|---:|---|---:|---:|---:|---:|---:|---:|---|---:|---:|",
+        "| Clip | Audio s | ASR s | ASR RTF | Segments | Refined | Timing | p50 | p95 | max | >10s | >30s | LLM s | ASR SRT | ZH SRT | ASR entries | ZH entries |",
+        "|---|---:|---:|---:|---:|---:|---|---:|---:|---:|---:|---:|---:|---|---:|---:|---:|",
     ]
     for row in rows:
         lines.append(
-            "| {clip} | {audio:.1f} | {asr:.2f} | {rtf:.3f} | {segments} | {timing} | "
+            "| {clip} | {audio:.1f} | {asr:.2f} | {rtf:.3f} | {segments} | {refined} | {timing} | "
             "{p50:.1f} | {p95:.1f} | {max:.1f} | {over10} | {over30} | {llm:.2f} | "
-            "`{asr_srt}` | `{zh_srt}` | {zh_entries} |".format(
+            "`{asr_srt}` | `{zh_srt}` | {asr_entries} | {zh_entries} |".format(
                 clip=str(row["clip"]).replace("|", "\\|"),
                 audio=float(row["audio_seconds"] or 0),
                 asr=float(row["asr_seconds"]),
                 rtf=float(row["asr_rtf"] or 0),
-                segments=int(row["segments"]),
+                segments=int(row["raw_segments"]),
+                refined=int(row["segments"]),
                 timing=str(row["timing_source"]),
                 p50=float(row["duration_p50"]),
                 p95=float(row["duration_p95"]),
@@ -66,6 +54,7 @@ def render_metrics_report(rows: list[dict[str, object]], *, run_label: str) -> s
                 llm=float(row["polish_seconds"]),
                 asr_srt=row["asr_srt_rel"],
                 zh_srt=row["zh_srt_rel"],
+                asr_entries=int(row["asr_srt_entries"]),
                 zh_entries=int(row["zh_srt_entries"]),
             )
         )
@@ -75,6 +64,8 @@ def render_metrics_report(rows: list[dict[str, object]], *, run_label: str) -> s
             [
                 f"## {row['clip']}",
                 "",
+                f"- Raw ASR segments: {int(row['raw_segments'])}",
+                f"- Refined segments: {int(row['segments'])}",
                 f"- ASR SRT: `{row['asr_srt_rel']}` ({int(row['asr_srt_entries'])} entries)",
                 f"- Chinese SRT: `{row['zh_srt_rel']}` ({int(row['zh_srt_entries'])} entries)",
                 f"- Timing confidence mix: {row['timing_confidence']}",
@@ -95,6 +86,7 @@ def process_clip(
     polish_model: str,
     chunk_chars: int,
     llm_timeline: str,
+    profile: str,
     srt_dir: Path,
     skip_polish: bool,
 ) -> dict[str, object]:
@@ -112,6 +104,8 @@ def process_clip(
         else bvl.max_timestamp_seconds(raw) or bvl.ffprobe_duration(audio)
     )
     segments = bvl.parse_asr_segments(raw, asr_text, audio_seconds, asr_payload=asr_payload)
+    raw_segments = len(segments)
+    words = asr_payload.get("words") if isinstance(asr_payload.get("words"), list) else []
     duration_stats = bvl.segment_duration_stats(segments)
     timeline = bvl.format_timeline(segments)
     llm_input = bvl.build_llm_input(
@@ -125,23 +119,22 @@ def process_clip(
     stem = audio.stem
     asr_srt_path = srt_dir / f"{stem}.asr.srt"
     zh_srt_path = srt_dir / f"{stem}.zh.srt"
-    asr_entries = segments_to_srt_entries(segments)
-    bvl.write_srt(asr_srt_path, asr_entries)
+    asr_entries = build_asr_srt_entries(segments, words)
+    write_srt(asr_srt_path, asr_entries)
 
     polish_seconds = 0.0
-    zh_entries: list[tuple[float, float, str]] = []
     polished = ""
     if skip_polish:
-        bvl.write_srt(zh_srt_path, asr_entries)
         zh_entries = asr_entries
+        write_srt(zh_srt_path, zh_entries)
     else:
         polished, polish_seconds = bvl.generate_by_chunk(
             polish_model,
             chunks,
-            lambda chunk: bvl.polish_prompt(chunk, "vr"),
+            lambda chunk: bvl.polish_prompt(chunk, profile),
         )
-        zh_entries = bvl.parse_srt_entries(polished)
-        bvl.write_srt(zh_srt_path, zh_entries)
+        zh_entries = build_zh_srt_entries(polished, segments, words)
+        write_srt(zh_srt_path, zh_entries)
 
     confidence_counts: dict[str, int] = {}
     for segment in segments:
@@ -153,6 +146,7 @@ def process_clip(
         "audio_seconds": audio_seconds,
         "asr_seconds": asr_seconds,
         "asr_rtf": asr_seconds / audio_seconds if audio_seconds else None,
+        "raw_segments": raw_segments,
         "segments": len(segments),
         "timing_source": str(asr_payload.get("timing_source", "unknown")),
         "duration_p50": duration_stats["p50"],
@@ -183,7 +177,7 @@ def collect_clips(args: argparse.Namespace) -> list[Path]:
             files = [p for p in files if args.name_filter.lower() in p.name.lower()]
         return files
     if args.clip:
-        return [args.clip]
+        return list(args.clip)
     return []
 
 
@@ -200,6 +194,7 @@ def main() -> None:
     parser.add_argument("--srt-dir", type=Path, default=DEFAULT_SRT_DIR)
     parser.add_argument("--run-label", default="vr_subtitle_test")
     parser.add_argument("--language", default="ja")
+    parser.add_argument("--profile", choices=["vr", "subtitle"], default="vr")
     parser.add_argument("--asr-backend", choices=["cpp", "official"], default="official")
     parser.add_argument("--asr-device", default=None)
     parser.add_argument("--asr-model", default=None)
@@ -233,6 +228,7 @@ def main() -> None:
                 polish_model=args.polish_model,
                 chunk_chars=args.chunk_chars,
                 llm_timeline=args.llm_timeline,
+                profile=args.profile,
                 srt_dir=args.srt_dir,
                 skip_polish=args.skip_polish,
             )

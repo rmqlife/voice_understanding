@@ -71,52 +71,28 @@
 
 ### P1 — 文本与时间解耦 + 回对齐（KrillinAI 核心）
 
-- [ ] **新增 `python/sense_voice/timestamps.py`**
+- [x] **新增 `python/sense_voice/timestamps.py`**
   - 移植 `BaseLanguageMatcher` 逻辑（CJK 按字符、英文按词）
   - 输入：`words[]` + `sentences[]`（润色前的原文句）
   - 输出：每句 `{start, end}`，带 `last_end` 单调约束
-- [ ] **新增 `python/sense_voice/subtitle.py`**
+- [x] **新增 `python/sense_voice/subtitle.py`**
   - 标点拆句（`。！？!?\.`）+ `max_sentence_chars`（默认 40，中文按加权字符）
-  - 超长句：规则切分优先；必要时 LLM 拆句但**保留 origin_part 列表**
-- [ ] **润色后重对齐**
-  - LLM 润色只改 `text`，时间轴用**润色前原文**做对齐锚点
-  - 若润色合并/拆条：要求 LLM 输出 `origin_span` 或按原文子串 fuzzy match 回 words
-  - 参考 KrillinAI：`splitLongSentence` 的 `origin_part` / `translated_part` JSON 对齐
+  - 超长句：规则切分优先；支持 LLM JSON `align` 的 `origin_part` / `translated_part`
+- [x] **润色后重对齐**
+  - `build_zh_srt_entries`：用原文锚点 `realign_polished_entries` 回对齐词级时间轴
+  - 解析 LLM JSON align 块时走 `build_entries_from_alignments`
 
-### P2 — SRT 生成与显示切分
-
-- [ ] **`scripts/srt.py` 或 `sense_voice/srt.py`**
+- [x] **`python/sense_voice/srt.py`**
   - 标准 SRT 写出（`HH:MM:SS,mmm`）
-  - 单条最大显示时长（如 6s）和最大字数（如 12 字/行，可配置）
-  - 超长句二次切分：按词时间戳均分或按 `MaxWordOneLine` 逻辑（见 `generateSrtWithTimestamps`）
-- [ ] **benchmark 增加 SRT 输出**
-  - `--srt-out path/to/file.srt`
-  - 报告增加指标：segment 时长 p50/p95、>10s 条数、>30s 条数
+  - 单条最大显示时长（默认 6s）和最大字数（默认 12 字/行）
+  - 超长句二次切分：`split_entries_for_display`
 
-### P3 — 长音频与 C++ 后端
+- [x] **长音频静音切分**（可选，>10min）
+  - `get_silence_split_points()`：`ffmpeg silencedetect` 在目标时长附近找切点
 
-- [ ] **长音频静音切分**（可选，>10min）
-  - 移植 KrillinAI `GetSplitPoints` / `getQuietestTimePoint` 思路
-  - 或用 ffmpeg `silencedetect` 找切点，每段独立 ASR 后 offset 合并 words
-- [ ] **C++ 后端词级时间戳**
-  - `SenseVoice.cpp` 已有 `token t0/t1`（experimental）和 `-wt word_thold`
-  - 扩展 `parse_transcript` 解析 token 级输出，与 official 后端统一为 `words[]` 结构
-
-### P4 — LLM prompt / pipeline 调整
-
-- [ ] **VR profile**：润色 prompt 要求「一条输入时间线 → 一条输出」，禁止合并多条
-- [ ] **新增 `subtitle` profile**：只做断句/去口癖，不改写语义，专门服务 SRT
-- [ ] **chunk 策略**：按时间窗口分块（如每 3min），块内独立对齐，避免跨块时间漂移
-
----
-
-## 建议实施顺序
-
-1. `output_timestamp=True` + 解析 `sentence_info` → 立刻缩短大部分 segment
-2. 实现 `timestamps.py` 对齐层 → 润色/拆句后可重算时间
-3. `srt.py` 导出 + benchmark 指标 → 可量化验证（p95 时长、>10s 占比）
-4. VAD 参数调优 + 长音频切分
-5. C++ 词级时间戳（macOS 路径）
+- [x] **VR / subtitle profile**
+  - `vr`：保持 1:1 时间线条目
+  - 新增 `subtitle` profile：只做断句/去口癖，专门服务 SRT
 
 ---
 
@@ -142,5 +118,5 @@
 | `python/sense_voice/transcribe.py` | `pkg/whispercpp/transcription.go` |
 | `scripts/benchmark_voice_llm.py` `parse_asr_segments` | `internal/service/audio2subtitle.go` |
 | （待建）`python/sense_voice/timestamps.py` | `internal/service/timestamps.go` |
-| （待建）`python/sense_voice/srt.py` | `pkg/util/subtitle.go`, `generateSrtWithTimestamps` |
+| `python/sense_voice/srt.py` | `pkg/util/subtitle.go`, `generateSrtWithTimestamps` |
 | `scripts/benchmark_voice_llm.py` `polish_prompt` | `splitTextAndTranslateV2`, `splitTranslateItem` |

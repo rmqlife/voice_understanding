@@ -112,6 +112,22 @@ def ollama_generate(model: str, prompt: str) -> tuple[str, float]:
 
 
 def polish_prompt(text: str, profile: str) -> str:
+    if profile == "subtitle":
+        return f"""/no_think
+你是字幕断句编辑。下面是从 ASR 得到的时间线，请整理成适合烧录的中文字幕。
+
+要求：
+- 保留时间线结构；每条输入必须对应一条输出，禁止合并、拆分或重排条目。
+- 只删除口癖、重复、明显识别噪声；不要改写语义，不要扩写。
+- 输出主体为中文；原文为外语时做直译式翻译，保持简短。
+- 时间戳必须与输入完全一致，格式为 `- [开始-结束] 中文字幕文本`。
+- 呻吟/笑声/喘息/背景音乐/不可辨语音写进 text，例如“[喘息]”“[笑声]”。
+- 输出 Markdown：`## Timeline` + 时间线条目 + `## Notes`（仅 ASR 不确定点）。
+
+ASR 时间线：
+{text}
+"""
+
     if profile == "vr":
         return f"""/no_think
 你是一个音频场景整理助手。下面是来自 VR/成人视频音轨的 ASR 时间线，可能包含亲密或露骨成人内容。
@@ -205,6 +221,8 @@ def assess_prompt(
 ) -> str:
     if profile == "vr":
         work_type = "VR/成人视频时间线整理"
+    elif profile == "subtitle":
+        work_type = "VR/字幕断句整理"
     elif include_english:
         work_type = "ASR 转写 -> 中文润色 -> 英文翻译"
     else:
@@ -346,6 +364,16 @@ def parse_asr_segments(
             segment["end"] = min(audio_seconds, cursor)
             segment["timing_confidence"] = "low"
 
+    words = (asr_payload or {}).get("words")
+    if isinstance(words, list) and words and segments:
+        try:
+            sys.path.insert(0, str(ROOT / "python"))
+            from sense_voice.subtitle import refine_segments
+
+            segments = refine_segments(segments, words)
+        except Exception:
+            pass
+
     if timing_source and segments and all(segment.get("timing_confidence") is None for segment in segments):
         for segment in segments:
             segment["timing_confidence"] = "medium" if timing_source != "none" else None
@@ -415,7 +443,7 @@ def format_timeline_compact(segments: list[dict[str, object]]) -> str:
 def resolve_llm_timeline_mode(profile: str, llm_timeline: str | None) -> str:
     if llm_timeline:
         return llm_timeline
-    return "compact" if profile == "vr" else "full"
+    return "compact" if profile in {"vr", "subtitle"} else "full"
 
 
 def build_llm_input(
@@ -608,7 +636,7 @@ def main() -> None:
     parser.add_argument("--assess-model", default=None, help="Ollama model for quality assessment")
     parser.add_argument(
         "--profile",
-        choices=["finance", "vr", "generic"],
+        choices=["finance", "vr", "generic", "subtitle"],
         default="finance",
         help="Prompt profile for transcript cleanup",
     )
@@ -702,11 +730,23 @@ def main() -> None:
         )
         srt_path = None
         srt_entries = 0
+        asr_srt_path = None
+        asr_srt_entries = 0
+        words = asr_payload.get("words") if isinstance(asr_payload.get("words"), list) else []
         if args.srt_dir:
-            srt_path = args.srt_dir / audio.with_suffix(".srt").name
-            entries = parse_srt_entries(polished)
-            write_srt(srt_path, entries)
-            srt_entries = len(entries)
+            sys.path.insert(0, str(ROOT / "python"))
+            from sense_voice.srt import write_srt
+            from sense_voice.subtitle import build_asr_srt_entries, build_zh_srt_entries
+
+            args.srt_dir.mkdir(parents=True, exist_ok=True)
+            asr_srt_path = args.srt_dir / f"{audio.stem}.asr.srt"
+            srt_path = args.srt_dir / f"{audio.stem}.zh.srt"
+            asr_entries = build_asr_srt_entries(segments, words)
+            write_srt(asr_srt_path, asr_entries)
+            asr_srt_entries = len(asr_entries)
+            zh_entries = build_zh_srt_entries(polished, segments, words)
+            write_srt(srt_path, zh_entries)
+            srt_entries = len(zh_entries)
         if args.skip_translate:
             english = ""
             translate_seconds = 0.0
@@ -751,7 +791,9 @@ def main() -> None:
                 "chunks": len(chunks),
                 "polished_chars": len(polished),
                 "srt_path": srt_path,
+                "asr_srt_path": asr_srt_path,
                 "srt_entries": srt_entries,
+                "asr_srt_entries": asr_srt_entries,
                 "english_chars": len(english),
                 "polish_seconds": polish_seconds,
                 "translate_seconds": translate_seconds,
