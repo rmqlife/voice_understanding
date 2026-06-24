@@ -1,3 +1,3 @@
-from .transcribe import SenseVoice, strip_tags
+from .transcribe import SenseVoice, extract_official_segments, strip_tags
 
-__all__ = ["SenseVoice", "strip_tags"]
+__all__ = ["SenseVoice", "extract_official_segments", "strip_tags"]

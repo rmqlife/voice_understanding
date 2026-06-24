@@ -9,22 +9,215 @@ import subprocess
 import sys
 import time
 from contextlib import redirect_stdout
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_BIN = ROOT / "SenseVoice.cpp" / "build" / "bin" / "sense-voice-main"
 DEFAULT_MODEL = ROOT / "models" / "sense-voice-small-fp16.gguf"
 DEFAULT_OFFICIAL_MODEL = "iic/SenseVoiceSmall"
+DEFAULT_MERGE_LENGTH_S = 6
+DEFAULT_MAX_SINGLE_SEGMENT_MS = 12_000
 
 TAG_PATTERN = re.compile(r"<\|[^|]+\|>")
+TAG_GROUP_PATTERN = re.compile(r"((?:<\|[^|]+\|>)+)([^<]*)")
 TIMESTAMP_PATTERN = re.compile(r"^\[[\d.\-]+\]\s*")
+LANG_TAGS = {"zh", "en", "yue", "ja", "ko", "nospeech"}
+SPEECH_TAGS = {"Speech", "Applause", "BGM", "Laughter", "Event"}
+ITN_TAGS = {"withitn", "woitn"}
 
 
 def strip_tags(text: str) -> str:
     """Remove SenseVoice special tokens and optional timestamp prefix."""
     text = TIMESTAMP_PATTERN.sub("", text)
     return TAG_PATTERN.sub("", text).strip()
+
+
+def _ms_to_seconds(value: Any) -> float | None:
+    if value is None:
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if number > 1000:
+        return number / 1000.0
+    return number
+
+
+def _parse_tagged_chunks(text: str) -> list[dict[str, Any]]:
+    segments: list[dict[str, Any]] = []
+    for match in TAG_GROUP_PATTERN.finditer(text):
+        tags = re.findall(r"<\|([^|]+)\|>", match.group(1))
+        segment_text = match.group(2).strip()
+        if not segment_text:
+            continue
+        lang = next((tag for tag in tags if tag in LANG_TAGS), None)
+        speech_type = next((tag for tag in tags if tag in SPEECH_TAGS), None)
+        itn = next((tag for tag in tags if tag in ITN_TAGS), None)
+        emotions = [
+            tag
+            for tag in tags
+            if tag not in LANG_TAGS and tag not in SPEECH_TAGS and tag not in ITN_TAGS
+        ]
+        segments.append(
+            {
+                "start": None,
+                "end": None,
+                "lang": lang,
+                "type": speech_type,
+                "itn": itn,
+                "emotion": ",".join(emotions) if emotions else None,
+                "text": strip_tags(segment_text),
+                "timing_confidence": None,
+            }
+        )
+    return segments
+
+
+def _allocate_time_ranges(
+    start: float,
+    end: float,
+    segments: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    if not segments:
+        return segments
+    if end <= start:
+        for segment in segments:
+            segment["start"] = start
+            segment["end"] = end
+            segment["timing_confidence"] = "low"
+        return segments
+
+    total_chars = sum(max(1, len(str(segment["text"]))) for segment in segments)
+    cursor = start
+    duration = end - start
+    for index, segment in enumerate(segments):
+        if index == len(segments) - 1:
+            segment["start"] = cursor
+            segment["end"] = end
+        else:
+            chunk_duration = duration * max(1, len(str(segment["text"]))) / total_chars
+            segment["start"] = cursor
+            segment["end"] = cursor + chunk_duration
+            cursor += chunk_duration
+        segment["timing_confidence"] = "medium"
+    return segments
+
+
+def _segments_from_timed_text(
+    text: str,
+    start: float | None,
+    end: float | None,
+    *,
+    timing_confidence: str,
+) -> list[dict[str, Any]]:
+    chunks = _parse_tagged_chunks(text)
+    if not chunks:
+        clean = strip_tags(text)
+        if not clean:
+            return []
+        return [
+            {
+                "start": start,
+                "end": end,
+                "lang": None,
+                "type": None,
+                "itn": None,
+                "emotion": None,
+                "text": clean,
+                "timing_confidence": timing_confidence,
+            }
+        ]
+
+    if start is not None and end is not None:
+        return _allocate_time_ranges(start, end, chunks)
+    for chunk in chunks:
+        chunk["timing_confidence"] = timing_confidence
+    return chunks
+
+
+def _words_from_timestamp(text: str, timestamp: Any) -> list[dict[str, Any]]:
+    if not isinstance(timestamp, list) or not timestamp:
+        return []
+
+    readable = strip_tags(text).replace(" ", "")
+    chars = list(readable)
+    if not chars:
+        return []
+
+    words: list[dict[str, Any]] = []
+    for index, item in enumerate(timestamp):
+        if index >= len(chars):
+            break
+        if not isinstance(item, (list, tuple)) or len(item) < 2:
+            continue
+        start = _ms_to_seconds(item[0])
+        end = _ms_to_seconds(item[1])
+        if start is None or end is None:
+            continue
+        words.append(
+            {
+                "text": chars[index],
+                "start": start,
+                "end": end,
+            }
+        )
+    return words
+
+
+def extract_official_segments(result: list[Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]], str]:
+    """Parse FunASR SenseVoice output into timed segments and optional word spans."""
+    if not result:
+        return [], [], "none"
+
+    item = result[0] if isinstance(result[0], dict) else {}
+    sentence_info = item.get("sentence_info")
+    if isinstance(sentence_info, list) and sentence_info:
+        segments: list[dict[str, Any]] = []
+        words: list[dict[str, Any]] = []
+        for sent in sentence_info:
+            if not isinstance(sent, dict):
+                continue
+            start = _ms_to_seconds(sent.get("start"))
+            end = _ms_to_seconds(sent.get("end"))
+            text = str(sent.get("text", ""))
+            segments.extend(
+                _segments_from_timed_text(
+                    text,
+                    start,
+                    end,
+                    timing_confidence="high",
+                )
+            )
+            words.extend(_words_from_timestamp(text, sent.get("timestamp")))
+        if segments:
+            return segments, words, "sentence_info"
+
+    timestamp = item.get("timestamp")
+    words = _words_from_timestamp(str(item.get("text", "")), timestamp)
+    if words:
+        start = words[0]["start"]
+        end = words[-1]["end"]
+        segments = _segments_from_timed_text(
+            str(item.get("text", "")),
+            start,
+            end,
+            timing_confidence="high",
+        )
+        if segments:
+            return segments, words, "timestamp"
+
+    segments = _segments_from_timed_text(
+        str(item.get("text", "")),
+        None,
+        None,
+        timing_confidence="tag_only",
+    )
+    if segments:
+        return segments, words, "tag_only"
+    return [], words, "none"
 
 
 def get_audio_duration(path: str | Path) -> float:
@@ -85,12 +278,27 @@ class TranscriptionResult:
     text: str
     audio_seconds: float
     process_seconds: float
+    sentences: list[dict[str, Any]] = field(default_factory=list)
+    words: list[dict[str, Any]] = field(default_factory=list)
+    timing_source: str = "none"
 
     @property
     def rtf(self) -> float:
         if self.audio_seconds <= 0:
             return 0.0
         return self.process_seconds / self.audio_seconds
+
+    def to_json_dict(self) -> dict[str, Any]:
+        return {
+            "text": self.text,
+            "raw": self.raw,
+            "audio_seconds": self.audio_seconds,
+            "process_seconds": self.process_seconds,
+            "rtf": self.rtf,
+            "sentences": self.sentences,
+            "words": self.words,
+            "timing_source": self.timing_source,
+        }
 
 
 class SenseVoice:
@@ -113,6 +321,8 @@ class SenseVoice:
         device: str | None = None,
         vad_model: str = "fsmn-vad",
         disable_update: bool = True,
+        merge_length_s: float = DEFAULT_MERGE_LENGTH_S,
+        max_single_segment_ms: int = DEFAULT_MAX_SINGLE_SEGMENT_MS,
     ) -> None:
         self.backend = (backend or os.environ.get("SENSE_VOICE_BACKEND", "cpp")).lower()
         if self.backend in {"cxx", "sensevoice.cpp", "sense-voice.cpp"}:
@@ -138,6 +348,8 @@ class SenseVoice:
         )
         self.vad_model = vad_model
         self.disable_update = disable_update
+        self.merge_length_s = merge_length_s
+        self.max_single_segment_ms = max_single_segment_ms
         self._official_model = None
 
     def _build_cpp_cmd(self, audio_path: str | Path) -> list[str]:
@@ -187,7 +399,7 @@ class SenseVoice:
                 model=str(self.model_path),
                 trust_remote_code=False,
                 vad_model=self.vad_model,
-                vad_kwargs={"max_single_segment_time": 30000},
+                vad_kwargs={"max_single_segment_time": self.max_single_segment_ms},
                 device=self.device,
                 disable_update=self.disable_update,
             )
@@ -223,6 +435,7 @@ class SenseVoice:
                 text=clean,
                 audio_seconds=audio_seconds,
                 process_seconds=process_seconds,
+                timing_source="cpp_vad",
             )
         return clean
 
@@ -243,9 +456,12 @@ class SenseVoice:
                 use_itn=self.use_itn,
                 batch_size_s=60,
                 merge_vad=True,
-                merge_length_s=15,
+                merge_length_s=self.merge_length_s,
+                output_timestamp=True,
             )
         process_seconds = time.perf_counter() - started
+
+        sentences, words, timing_source = extract_official_segments(result)
 
         texts: list[str] = []
         for item in result:
@@ -266,6 +482,9 @@ class SenseVoice:
                 text=clean,
                 audio_seconds=audio_seconds,
                 process_seconds=process_seconds,
+                sentences=sentences,
+                words=words,
+                timing_source=timing_source,
             )
         return clean
 

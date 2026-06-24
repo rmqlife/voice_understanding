@@ -116,13 +116,7 @@ def main() -> None:
         if args.output_format == "json":
             print(
                 json.dumps(
-                    {
-                        "text": result.text,
-                        "raw": result.raw,
-                        "audio_seconds": result.audio_seconds,
-                        "process_seconds": result.process_seconds,
-                        "rtf": result.rtf,
-                    },
+                    result.to_json_dict(),
                     ensure_ascii=False,
                 ),
                 flush=True,

@@ -32,7 +32,7 @@ def run_asr(
     backend: str,
     device: str | None,
     model: str | None,
-) -> tuple[str, str, float | None, float, str]:
+) -> tuple[str, str, float | None, float, str, dict[str, object]]:
     cmd = [
         "pixi",
         "run",
@@ -66,13 +66,14 @@ def run_asr(
     try:
         payload = json.loads(proc.stdout)
     except json.JSONDecodeError:
-        return proc.stdout.strip(), proc.stdout.strip(), None, elapsed, proc.stderr.strip()
+        return proc.stdout.strip(), proc.stdout.strip(), None, elapsed, proc.stderr.strip(), {}
     return (
         str(payload.get("text", "")).strip(),
         str(payload.get("raw", "")).strip(),
         payload.get("audio_seconds"),
         elapsed,
         proc.stderr.strip(),
+        payload,
     )
 
 
@@ -263,8 +264,24 @@ def parse_tagged_text(text: str) -> list[dict[str, object]]:
     return segments
 
 
-def parse_asr_segments(raw: str, text: str, audio_seconds: float | None) -> list[dict[str, object]]:
+def parse_asr_segments(
+    raw: str,
+    text: str,
+    audio_seconds: float | None,
+    *,
+    asr_payload: dict[str, object] | None = None,
+) -> list[dict[str, object]]:
     segments: list[dict[str, object]] = []
+    timing_source = str((asr_payload or {}).get("timing_source", ""))
+
+    structured = (asr_payload or {}).get("sentences")
+    if isinstance(structured, list) and structured:
+        for item in structured:
+            if isinstance(item, dict) and item.get("text"):
+                segments.append(dict(item))
+        if segments:
+            return segments
+
     try:
         payload = json.loads(raw)
     except json.JSONDecodeError:
@@ -286,6 +303,7 @@ def parse_asr_segments(raw: str, text: str, audio_seconds: float | None) -> list
                 for segment in tagged:
                     segment["start"] = float(match.group(1))
                     segment["end"] = float(match.group(2))
+                    segment["timing_confidence"] = "high"
                     segments.append(segment)
             else:
                 segments.append(
@@ -297,6 +315,7 @@ def parse_asr_segments(raw: str, text: str, audio_seconds: float | None) -> list
                         "itn": None,
                         "emotion": None,
                         "text": strip_tags(segment_text),
+                        "timing_confidence": "high",
                     }
                 )
 
@@ -311,6 +330,7 @@ def parse_asr_segments(raw: str, text: str, audio_seconds: float | None) -> list
                 "itn": None,
                 "emotion": None,
                 "text": chunk.strip(),
+                "timing_confidence": None,
             }
             for chunk in chunks
             if chunk.strip()
@@ -324,8 +344,47 @@ def parse_asr_segments(raw: str, text: str, audio_seconds: float | None) -> list
             segment["start"] = cursor
             cursor += duration
             segment["end"] = min(audio_seconds, cursor)
+            segment["timing_confidence"] = "low"
+
+    if timing_source and segments and all(segment.get("timing_confidence") is None for segment in segments):
+        for segment in segments:
+            segment["timing_confidence"] = "medium" if timing_source != "none" else None
 
     return segments
+
+
+def segment_duration_stats(segments: list[dict[str, object]]) -> dict[str, float | int]:
+    durations: list[float] = []
+    for segment in segments:
+        start = segment.get("start")
+        end = segment.get("end")
+        if start is None or end is None:
+            continue
+        duration = float(end) - float(start)
+        if duration > 0:
+            durations.append(duration)
+    if not durations:
+        return {
+            "count": len(segments),
+            "timed_count": 0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "max": 0.0,
+            "over_10s": 0,
+            "over_30s": 0,
+        }
+    durations.sort()
+    p50 = durations[len(durations) // 2]
+    p95 = durations[max(0, int(len(durations) * 0.95) - 1)]
+    return {
+        "count": len(segments),
+        "timed_count": len(durations),
+        "p50": p50,
+        "p95": p95,
+        "max": max(durations),
+        "over_10s": sum(1 for value in durations if value > 10),
+        "over_30s": sum(1 for value in durations if value > 30),
+    }
 
 
 def format_timeline(segments: list[dict[str, object]]) -> str:
@@ -613,7 +672,7 @@ def main() -> None:
     for audio in audio_files:
         print(f"Processing {audio.name}", flush=True)
         stop_ollama_models([polish_model, translate_model, assess_model])
-        asr_text, raw, result_audio_seconds, asr_seconds, stderr = run_asr(
+        asr_text, raw, result_audio_seconds, asr_seconds, stderr, asr_payload = run_asr(
             audio,
             args.language,
             backend=args.asr_backend,
@@ -625,7 +684,8 @@ def main() -> None:
             if result_audio_seconds is not None
             else max_timestamp_seconds(raw) or ffprobe_duration(audio)
         )
-        segments = parse_asr_segments(raw, asr_text, audio_seconds)
+        segments = parse_asr_segments(raw, asr_text, audio_seconds, asr_payload=asr_payload)
+        duration_stats = segment_duration_stats(segments)
         timeline = format_timeline(segments)
         llm_input = build_llm_input(
             segments,
@@ -682,6 +742,12 @@ def main() -> None:
                 "raw_chars": len(llm_input),
                 "timeline_chars": len(timeline),
                 "segments": len(segments),
+                "timing_source": str(asr_payload.get("timing_source", "unknown")),
+                "duration_p50": duration_stats["p50"],
+                "duration_p95": duration_stats["p95"],
+                "duration_max": duration_stats["max"],
+                "duration_over_10s": duration_stats["over_10s"],
+                "duration_over_30s": duration_stats["over_30s"],
                 "chunks": len(chunks),
                 "polished_chars": len(polished),
                 "srt_path": srt_path,
@@ -823,6 +889,14 @@ def main() -> None:
         lines.append(f"- Approx. audio duration: {float(r['audio_seconds'] or 0):.1f}s")
         lines.append(f"- ASR wall time: {float(r['asr_seconds']):.2f}s")
         lines.append(f"- Structured ASR segments: {int(r['segments'])}")
+        lines.append(f"- ASR timing source: `{r['timing_source']}`")
+        lines.append(
+            f"- Segment duration p50/p95/max: {float(r['duration_p50']):.1f}s / "
+            f"{float(r['duration_p95']):.1f}s / {float(r['duration_max']):.1f}s"
+        )
+        lines.append(
+            f"- Segments >10s / >30s: {int(r['duration_over_10s'])} / {int(r['duration_over_30s'])}"
+        )
         lines.append(f"- LLM input chars: {int(r['raw_chars'])}")
         if r["srt_path"]:
             lines.append(f"- Chinese SRT: `{r['srt_path']}` ({int(r['srt_entries'])} entries)")

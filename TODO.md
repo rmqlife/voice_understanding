@@ -57,15 +57,15 @@
 
 ### P0 — 拿到更细的时间戳（不依赖 LLM）
 
-- [ ] **official 后端开启 `output_timestamp=True`**
+- [x] **official 后端开启 `output_timestamp=True`**
   - 修改 `python/sense_voice/transcribe.py` `_transcribe_official`
   - 解析 `res[0]["timestamp"]` 和/或 `res[0]["sentence_info"]`（`start`/`end` 为 ms）
   - JSON 输出增加 `words: [{text, start, end}]` 和 `sentences: [...]`
-- [ ] **收紧 VAD 合并参数**（先 A/B 对比）
-  - `merge_length_s`: 15 → 5~8
-  - `vad_kwargs.max_single_segment_time`: 30000 → 10000~15000
+- [x] **收紧 VAD 合并参数**（先 A/B 对比）
+  - `merge_length_s`: 15 → 6
+  - `vad_kwargs.max_single_segment_time`: 30000 → 12000
   - 目标：ASR segment 中位时长 < 8s
-- [ ] **废弃或降级字符比例 fallback**
+- [x] **废弃或降级字符比例 fallback**
   - `parse_asr_segments` 里 `audio_seconds * chars / total_chars` 仅作 `confidence=low` 占位
   - 无真实时间戳时明确告警，不用于 SRT 烧录
 
