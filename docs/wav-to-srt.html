@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sense-Voice：WAV → SRT 流水线说明</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a2332;
+      --panel2: #243044;
+      --text: #e7ecf3;
+      --muted: #9aa8bc;
+      --accent: #5b9cff;
+      --accent2: #6ee7b7;
+      --warn: #fbbf24;
+      --danger: #f87171;
+      --border: #334155;
+      --code-bg: #0d1117;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+    }
+    header {
+      padding: 2.5rem 2rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #162032 0%, var(--bg) 100%);
+    }
+    header h1 { margin: 0 0 0.5rem; font-size: 1.85rem; font-weight: 700; }
+    header p { margin: 0; color: var(--muted); max-width: 52rem; }
+    main { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 1.5rem;
+    }
+    h2 { margin-top: 0; font-size: 1.25rem; color: var(--accent); }
+    h3 { font-size: 1rem; color: var(--accent2); margin-bottom: 0.5rem; }
+    p, li { color: #d1dae8; }
+    .muted { color: var(--muted); font-size: 0.92rem; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 800px) { .grid2 { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--panel2);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      border: 1px solid var(--border);
+    }
+    code, pre {
+      font-family: "SF Mono", "Menlo", monospace;
+      font-size: 0.86rem;
+    }
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      overflow-x: auto;
+      color: #c9d7ef;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.55rem 0.7rem;
+      text-align: left;
+    }
+    th { background: var(--panel2); color: var(--accent2); }
+    .diagram {
+      width: 100%;
+      overflow-x: auto;
+      margin: 1rem 0;
+      background: var(--code-bg);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .legend { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.75rem; }
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .bar-chart { margin: 1rem 0; }
+    .bar-row { display: flex; align-items: center; gap: 0.75rem; margin: 0.45rem 0; font-size: 0.88rem; }
+    .bar-label { width: 7.5rem; color: var(--muted); flex-shrink: 0; }
+    .bar-track { flex: 1; height: 22px; background: #1e293b; border-radius: 6px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 6px; display: flex; align-items: center; padding-left: 8px; font-size: 0.75rem; font-weight: 600; color: #0f172a; }
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      padding: 2rem 1rem 3rem;
+    }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>WAV → SRT：语音识别到字幕的组织逻辑</h1>
+    <p>
+      本文档描述 <code>sense-voice</code> 仓库如何把 VR/长音频 WAV 转成可烧录的 SRT。
+      核心思想参考 <a href="https://github.com/krillinai/KrillinAI">KrillinAI</a>：<strong>先文本、后时间</strong>——
+      不在 VAD 粗粒度时间上直接烧字幕，而是用字符级时间戳对齐、润色后再回对齐。
+    </p>
+  </header>
+
+  <main>
+    <section>
+      <h2>1. 总览：两阶段流水线</h2>
+      <p class="muted">Mac 上开发代码 → push GitHub → mag（GPU）跑测试 → rsync 拉回 SRT 与指标报告。</p>
+
+      <div class="diagram">
+        <svg viewBox="0 0 980 220" width="980" height="220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="流水线总览">
+          <defs>
+            <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#5b9cff"/>
+            </marker>
+            <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#3b82f6"/>
+              <stop offset="100%" stop-color="#2563eb"/>
+            </linearGradient>
+            <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#34d399"/>
+              <stop offset="100%" stop-color="#059669"/>
+            </linearGradient>
+            <linearGradient id="g3" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#fbbf24"/>
+              <stop offset="100%" stop-color="#d97706"/>
+            </linearGradient>
+          </defs>
+          <!-- boxes -->
+          <rect x="20" y="70" width="110" height="56" rx="10" fill="url(#g1)"/>
+          <text x="75" y="95" text-anchor="middle" fill="white" font-size="13" font-weight="600">WAV 音频</text>
+          <text x="75" y="112" text-anchor="middle" fill="#dbeafe" font-size="10">16kHz mono</text>
+
+          <rect x="160" y="70" width="120" height="56" rx="10" fill="url(#g1)"/>
+          <text x="220" y="95" text-anchor="middle" fill="white" font-size="13" font-weight="600">SenseVoice</text>
+          <text x="220" y="112" text-anchor="middle" fill="#dbeafe" font-size="10">ASR + 字符时间戳</text>
+
+          <rect x="310" y="70" width="130" height="56" rx="10" fill="url(#g2)"/>
+          <text x="375" y="95" text-anchor="middle" fill="white" font-size="13" font-weight="600">对齐 &amp; 拆句</text>
+          <text x="375" y="112" text-anchor="middle" fill="#d1fae5" font-size="10">timestamps + subtitle</text>
+
+          <rect x="470" y="45" width="120" height="50" rx="10" fill="url(#g3)"/>
+          <text x="530" y="68" text-anchor="middle" fill="white" font-size="12" font-weight="600">LLM 润色</text>
+          <text x="530" y="84" text-anchor="middle" fill="#fef3c7" font-size="10">ja → zh</text>
+
+          <rect x="470" y="110" width="120" height="50" rx="10" fill="url(#g2)"/>
+          <text x="530" y="133" text-anchor="middle" fill="white" font-size="12" font-weight="600">重对齐</text>
+          <text x="530" y="149" text-anchor="middle" fill="#d1fae5" font-size="10">原文锚点 → 时间</text>
+
+          <rect x="620" y="70" width="120" height="56" rx="10" fill="url(#g2)"/>
+          <text x="680" y="95" text-anchor="middle" fill="white" font-size="13" font-weight="600">显示切分</text>
+          <text x="680" y="112" text-anchor="middle" fill="#d1fae5" font-size="10">≤12字 / ≤6s</text>
+
+          <rect x="770" y="55" width="90" height="42" rx="8" fill="#475569"/>
+          <text x="815" y="80" text-anchor="middle" fill="white" font-size="11">.asr.srt</text>
+
+          <rect x="770" y="108" width="90" height="42" rx="8" fill="#475569"/>
+          <text x="815" y="133" text-anchor="middle" fill="white" font-size="11">.zh.srt</text>
+
+          <rect x="890" y="70" width="70" height="56" rx="10" fill="#64748b"/>
+          <text x="925" y="102" text-anchor="middle" fill="white" font-size="11">指标</text>
+          <text x="925" y="116" text-anchor="middle" fill="#cbd5e1" font-size="9">.md/.json</text>
+
+          <!-- arrows -->
+          <line x1="130" y1="98" x2="158" y2="98" stroke="#5b9cff" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="280" y1="98" x2="308" y2="98" stroke="#5b9cff" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="440" y1="88" x2="468" y2="70" stroke="#5b9cff" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="440" y1="108" x2="468" y2="135" stroke="#6ee7b7" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="590" y1="70" x2="618" y2="88" stroke="#5b9cff" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="590" y1="135" x2="618" y2="108" stroke="#6ee7b7" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="740" y1="88" x2="768" y2="76" stroke="#6ee7b7" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="740" y1="108" x2="768" y2="129" stroke="#6ee7b7" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="860" y1="98" x2="888" y2="98" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)"/>
+
+          <text x="490" y="28" fill="#9aa8bc" font-size="11">文本与时间解耦：润色改文案，时间从原文回对齐</text>
+        </svg>
+      </div>
+
+      <div class="legend">
+        <span><i class="dot" style="background:#3b82f6"></i> ASR / 音频</span>
+        <span><i class="dot" style="background:#34d399"></i> 时间轴算法</span>
+        <span><i class="dot" style="background:#fbbf24"></i> 本地 LLM（Ollama）</span>
+        <span><i class="dot" style="background:#64748b"></i> 产物</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>2. 与 KrillinAI 的对应关系</h2>
+      <div class="grid2">
+        <div class="card">
+          <h3>KrillinAI（Whisper）</h3>
+          <ol>
+            <li>Whisper 词级 <code>Word{Text, Start, End}</code></li>
+            <li>标点 + LLM 拆句（不带时间）</li>
+            <li><code>TimestampGenerator</code> 字符串对齐</li>
+            <li><code>MaxWordOneLine</code> 行内再切</li>
+            <li>写出 SRT</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>sense-voice（SenseVoice + FunASR）</h3>
+          <ol>
+            <li><code>output_timestamp=True</code> → 2751 字符级时间戳</li>
+            <li>tag 组对齐 + 标点拆句（<code>subtitle.py</code>）</li>
+            <li><code>timestamps.py</code> 字符流对齐（移植 KrillinAI）</li>
+            <li><code>srt.py</code>：≤12 字 / ≤6s 显示切分</li>
+            <li><code>.asr.srt</code> + <code>.zh.srt</code></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>3. 阶段详解</h2>
+
+      <h3>阶段 A — 音频 → 结构化 ASR（<code>transcribe.py</code>）</h3>
+      <div class="diagram">
+        <svg viewBox="0 0 900 180" width="900" height="180" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="20" width="140" height="140" rx="8" fill="#1e3a5f" stroke="#3b82f6"/>
+          <text x="80" y="50" text-anchor="middle" fill="#93c5fd" font-size="12" font-weight="600">FunASR</text>
+          <text x="80" y="72" text-anchor="middle" fill="#cbd5e1" font-size="10">SenseVoiceSmall</text>
+          <text x="80" y="92" text-anchor="middle" fill="#94a3b8" font-size="9">merge_length_s=6</text>
+          <text x="80" y="108" text-anchor="middle" fill="#94a3b8" font-size="9">max_segment=12s</text>
+          <text x="80" y="140" text-anchor="middle" fill="#6ee7b7" font-size="10">output_timestamp=True</text>
+
+          <text x="175" y="95" fill="#5b9cff" font-size="20">→</text>
+
+          <rect x="200" y="30" width="200" height="50" rx="6" fill="#243044" stroke="#475569"/>
+          <text x="300" y="52" text-anchor="middle" fill="#e2e8f0" font-size="11">text + tags</text>
+          <text x="300" y="68" text-anchor="middle" fill="#94a3b8" font-size="9">&lt;|ja|&gt;&lt;|Speech|&gt; 原文…</text>
+
+          <rect x="200" y="95" width="200" height="50" rx="6" fill="#243044" stroke="#475569"/>
+          <text x="300" y="117" text-anchor="middle" fill="#e2e8f0" font-size="11">words[] + timestamp[]</text>
+          <text x="300" y="133" text-anchor="middle" fill="#94a3b8" font-size="9">2751 字符 × [start_ms,end_ms]</text>
+
+          <text x="425" y="95" fill="#5b9cff" font-size="20">→</text>
+
+          <rect x="450" y="20" width="420" height="140" rx="8" fill="#14532d" stroke="#22c55e"/>
+          <text x="660" y="48" text-anchor="middle" fill="#86efac" font-size="12" font-weight="600">字符对齐（P0 关键修复）</text>
+          <text x="470" y="75" fill="#d1fae5" font-size="10">1. 合并 words → 字符流「惜しなくなっちゃった…」</text>
+          <text x="470" y="95" fill="#d1fae5" font-size="10">2. 按 SenseVoice tag 组切分文本</text>
+          <text x="470" y="115" fill="#d1fae5" font-size="10">3. 在字符流中找子串位置 → 取首尾字符时间</text>
+          <text x="470" y="140" fill="#fbbf24" font-size="10">❌ 旧逻辑：整段音频一个 start/end → 37s 字幕</text>
+        </svg>
+      </div>
+      <p>每个 tag 组得到一条 <code>segment</code>：<code>{start, end, text, lang, emotion, timing_confidence}</code>。</p>
+
+      <h3>阶段 B — 拆句与细化（<code>subtitle.py</code>）</h3>
+      <p>对超长 segment（&gt;8s 或加权字数 &gt;40）按标点 <code>。！？!?.</code> 和逗号再切，并用 <code>match_sentence_timestamp</code> 重新对齐。</p>
+      <p class="muted">日文 VR 口语常无句号，因此 segment 数可能仍为 122；显示级切分在下一阶段完成。</p>
+
+      <h3>阶段 C — LLM 润色（<code>benchmark_voice_llm.py</code>）</h3>
+      <p>紧凑时间线送入 Ollama（如 <code>nsfw-local:27b</code>），profile：</p>
+      <ul>
+        <li><code>vr</code> — 场景整理 + 中译</li>
+        <li><code>subtitle</code> — 只做断句/去口癖，不改语义，严格 1:1 条目</li>
+      </ul>
+      <pre>输入: [00:02.4-00:13.3] 惜しくなっちゃった 私たちのことも…
+输出: - [00:02.4-00:13.3] 真可惜，也让我们的身体感到舒适吧…</pre>
+
+      <h3>阶段 D — 润色后重对齐（P1）</h3>
+      <div class="diagram">
+        <svg viewBox="0 0 900 160" width="900" height="160" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="30" width="160" height="100" rx="8" fill="#422006" stroke="#f59e0b"/>
+          <text x="100" y="58" text-anchor="middle" fill="#fde68a" font-size="11" font-weight="600">LLM 中文 + 时间</text>
+          <text x="100" y="78" text-anchor="middle" fill="#fcd34d" font-size="9">显示文本（可能变长/变短）</text>
+          <text x="100" y="100" text-anchor="middle" fill="#94a3b8" font-size="9">时间戳可能不准</text>
+
+          <text x="200" y="85" fill="#5b9cff" font-size="18">+</text>
+
+          <rect x="220" y="30" width="160" height="100" rx="8" fill="#1e3a5f" stroke="#3b82f6"/>
+          <text x="300" y="58" text-anchor="middle" fill="#93c5fd" font-size="11" font-weight="600">origin_text 锚点</text>
+          <text x="300" y="78" text-anchor="middle" fill="#cbd5e1" font-size="9">润色前的日文原文</text>
+          <text x="300" y="100" text-anchor="middle" fill="#94a3b8" font-size="9">+ words[] 字符时间轴</text>
+
+          <text x="400" y="85" fill="#5b9cff" font-size="18">→</text>
+
+          <rect x="420" y="30" width="200" height="100" rx="8" fill="#14532d" stroke="#22c55e"/>
+          <text x="520" y="58" text-anchor="middle" fill="#86efac" font-size="11" font-weight="600">realign_polished_entries</text>
+          <text x="520" y="78" text-anchor="middle" fill="#d1fae5" font-size="9">用原文在字符流中找 start/end</text>
+          <text x="520" y="100" text-anchor="middle" fill="#d1fae5" font-size="9">保留中文 text，更新时间</text>
+
+          <text x="640" y="85" fill="#5b9cff" font-size="18">→</text>
+
+          <rect x="660" y="30" width="210" height="100" rx="8" fill="#243044" stroke="#64748b"/>
+          <text x="765" y="58" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="600">split_entries_for_display</text>
+          <text x="765" y="78" text-anchor="middle" fill="#94a3b8" font-size="9">max 12 字 / 6 秒</text>
+          <text x="765" y="100" text-anchor="middle" fill="#6ee7b7" font-size="9">122 segments → 256~374 条 SRT</text>
+        </svg>
+      </div>
+
+      <h3>阶段 E — 写出 SRT（<code>srt.py</code>）</h3>
+      <pre>1
+00:00:02,430 --> 00:00:13,350
+惜しくなっちゃった 私たちのことも気持ちよくして ほら、入れてあげて。
+
+2
+00:00:17,770 --> 00:00:23,350
+あった入っちゃた。</pre>
+      <p>每次测试产出两个文件：</p>
+      <ul>
+        <li><strong>.asr.srt</strong> — 原文时间轴，用于检查切分是否准确</li>
+        <li><strong>.zh.srt</strong> — 中文字幕，用于烧录</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>4. 字符对齐算法（<code>timestamps.py</code>）</h2>
+      <div class="diagram">
+        <svg viewBox="0 0 900 200" width="900" height="200" xmlns="http://www.w3.org/2000/svg">
+          <!-- timeline -->
+          <line x1="40" y1="150" x2="860" y2="150" stroke="#475569" stroke-width="3"/>
+          <text x="40" y="175" fill="#64748b" font-size="10">0s</text>
+          <text x="430" y="175" fill="#64748b" font-size="10">时间轴</text>
+          <text x="820" y="175" fill="#64748b" font-size="10">27min</text>
+
+          <!-- char boxes -->
+          <g fill="#3b82f6" opacity="0.85">
+            <rect x="80" y="120" width="18" height="24" rx="3"/><rect x="100" y="120" width="18" height="24" rx="3"/>
+            <rect x="120" y="120" width="18" height="24" rx="3"/><rect x="140" y="120" width="18" height="24" rx="3"/>
+            <rect x="160" y="120" width="18" height="24" rx="3"/><rect x="180" y="120" width="18" height="24" rx="3"/>
+          </g>
+          <text x="130" y="110" text-anchor="middle" fill="#93c5fd" font-size="10">chars with t0,t1</text>
+
+          <!-- segment bracket -->
+          <path d="M 75 95 L 75 85 L 205 85 L 205 95" fill="none" stroke="#6ee7b7" stroke-width="2"/>
+          <text x="140" y="78" text-anchor="middle" fill="#6ee7b7" font-size="11">tag 组 segment: 2.4s → 13.3s</text>
+
+          <!-- sentence match -->
+          <rect x="300" y="30" width="280" height="70" rx="8" fill="#1e293b" stroke="#334155"/>
+          <text x="440" y="55" text-anchor="middle" fill="#e2e8f0" font-size="11">clean_base_text(sentence)</text>
+          <text x="440" y="75" text-anchor="middle" fill="#94a3b8" font-size="10">在 clean_full_text 中找子串位置</text>
+          <text x="440" y="92" text-anchor="middle" fill="#6ee7b7" font-size="10">→ 映射到字符 index → start/end 秒</text>
+
+          <text x="600" y="70" fill="#5b9cff" font-size="16">→</text>
+
+          <rect x="620" y="40" width="240" height="50" rx="8" fill="#14532d" stroke="#22c55e"/>
+          <text x="740" y="62" text-anchor="middle" fill="#86efac" font-size="11">last_end 单调递增</text>
+          <text x="740" y="78" text-anchor="middle" fill="#d1fae5" font-size="9">防止字幕重叠</text>
+        </svg>
+      </div>
+      <p>若精确子串匹配失败，回退到 <code>fuzzy_match_sentence</code>（按字符集合在 words 中找连续区域）。</p>
+    </section>
+
+    <section>
+      <h2>5. 实测效果（vr_kavr500_part3.wav）</h2>
+      <table>
+        <thead>
+          <tr><th>指标</th><th>改进前（粗估）</th><th>P0 字符对齐</th><th>P1 完整流水线</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>segment p95</td><td>~30s</td><td>14.3s</td><td>14.3s</td></tr>
+          <tr><td>segment max</td><td>~37s</td><td>14.8s</td><td>14.8s</td></tr>
+          <tr><td>&gt;30s 条数</td><td>多条</td><td>0</td><td>0</td></tr>
+          <tr><td>ASR SRT 条目</td><td>—</td><td>122</td><td><strong>374</strong></td></tr>
+          <tr><td>ZH SRT 条目</td><td>—</td><td>140</td><td><strong>256</strong></td></tr>
+          <tr><td>ASR 耗时</td><td>—</td><td>~15s</td><td>~18s</td></tr>
+          <tr><td>LLM 耗时</td><td>—</td><td>~293s</td><td>~373s</td></tr>
+        </tbody>
+      </table>
+
+      <div class="bar-chart" aria-label="时长对比柱状图">
+        <div class="bar-row">
+          <span class="bar-label">单条最长</span>
+          <div class="bar-track"><div class="bar-fill" style="width:92%;background:#f87171">37s 改进前</div></div>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">P0/P1 p95</span>
+          <div class="bar-track"><div class="bar-fill" style="width:36%;background:#6ee7b7">14.3s</div></div>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">目标 p95</span>
+          <div class="bar-track"><div class="bar-fill" style="width:20%;background:#5b9cff">8s</div></div>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">SRT 显示条</span>
+          <div class="bar-track"><div class="bar-fill" style="width:16%;background:#fbbf24">≤6s</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>6. 代码模块地图</h2>
+      <table>
+        <thead>
+          <tr><th>模块 / 脚本</th><th>职责</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>python/sense_voice/transcribe.py</code></td><td>FunASR 调用、字符时间戳解析、tag 组对齐</td></tr>
+          <tr><td><code>python/sense_voice/timestamps.py</code></td><td>句子 ↔ 字符时间轴对齐（KrillinAI 移植）</td></tr>
+          <tr><td><code>python/sense_voice/subtitle.py</code></td><td>拆句、细化 segment、润色后重对齐、静音切分点</td></tr>
+          <tr><td><code>python/sense_voice/srt.py</code></td><td>SRT 读写、显示级切分（12字/6秒）</td></tr>
+          <tr><td><code>scripts/vr_subtitle_test.py</code></td><td>一键测试：ASR → 双 SRT → 指标报告</td></tr>
+          <tr><td><code>scripts/sync_from_mag.sh</code></td><td>从 mag 拉回 <code>reports/</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>7. 如何复现</h2>
+      <pre># mag 上
+cd ~/work/voice_understanding && git pull
+pixi run vr-subtitle-test -- \
+  --clips test_voice_clips --name-filter kavr \
+  --report reports/kavr_p1_subtitle_metrics.md \
+  --run-label my_run \
+  --asr-backend official --asr-device cuda:0 \
+  --polish-model nsfw-local:27b --language ja --profile subtitle
+
+# Mac 上拉回
+pixi run sync-reports-from-mag</pre>
+      <p class="muted">详见仓库 <code>RULE.md</code>（开发规范）与 <code>TODO.md</code>（改进路线）。</p>
+    </section>
+  </main>
+
+  <footer>
+    sense-voice · WAV → SRT 流水线文档 · 生成于 2026-06-24
+  </footer>
+</body>
+</html>

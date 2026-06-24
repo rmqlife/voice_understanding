@@ -41,7 +41,12 @@ def _ms_to_seconds(value: Any) -> float | None:
         number = float(value)
     except (TypeError, ValueError):
         return None
+    if number <= 0:
+        return 0.0
+    # FunASR may return ms as integers (e.g. 510) or seconds as floats (e.g. 2.13).
     if number > 1000:
+        return number / 1000.0
+    if number == int(number) and number >= 100:
         return number / 1000.0
     return number
 
