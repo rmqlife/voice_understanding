@@ -78,14 +78,23 @@ mag 曾出现过仅存在于机器上的文件（如 `mag/vr_audio_sync/`、`scr
 
 ## 测试与产物规范
 
-### 转写测试（待建，见 `docs/TODO-transcript.md`）
+### 转写测试（`docs/TODO-transcript.md`）
 
 ```bash
-# 规划中的入口
-pixi run transcript-test -- --clip test_voice_clips/微信录音\ 耿瑞香_....aac
+cd /home/rmqlife/work/voice_understanding
+
+pixi run transcript-test -- \
+  --clip "test_voice_clips/微信录音 耿瑞香_20250326090128_45748064860651968.aac" \
+  --diarize-method funasr \
+  --asr-backend official --asr-device cuda:0 \
+  --language zh \
+  --polish-model nsfw-local:27b \
+  --run-label geng_ruixiang_p1 \
+  --report reports/transcript/geng_ruixiang_p1_metrics.md \
+  2>&1 | tee reports/transcript/logs/geng_ruixiang_p1_run.log
 ```
 
-产物目录规划：`reports/transcript/<clip>.md` + `.json`（与 `reports/srt/` 分开）。
+产物：`reports/transcript/<clip>.md` + `.json`（与 `reports/srt/` 分开）。
 
 ### VR 字幕测试（推荐入口）
 
@@ -96,7 +105,7 @@ cd /home/rmqlife/work/voice_understanding
 
 pixi run vr-subtitle-test -- \
   --clips test_voice_clips --name-filter kavr \
-  --report reports/kavr_p0_subtitle_metrics.md \
+  --report reports/subtitle/metrics/kavr_p0_subtitle_metrics.md \
   --run-label <简短标签> \
   --asr-backend official --asr-device cuda:0 \
   --polish-model nsfw-local:27b \
@@ -111,16 +120,16 @@ pixi run vr-subtitle-test -- \
 |------|------|------|
 | ASR 时间轴 SRT | `reports/srt/<clip>.asr.srt` | 检查时间切分是否准确（原文） |
 | 中文 SRT | `reports/srt/<clip>.zh.srt` | 检查润色与烧录效果 |
-| 指标报告 | `reports/<run>_subtitle_metrics.md` | 耗时、segments、p50/p95、>10s/>30s |
-| JSON 指标 | `reports/<run>_subtitle_metrics.json` | 机器可读、便于对比 |
-| 运行日志 | `reports/<run>_subtitle_run.log` | 排错（可选 `tee`） |
+| 指标报告 | `reports/subtitle/metrics/<run>_subtitle_metrics.md` | 耗时、segments、p50/p95、>10s/>30s |
+| JSON 指标 | `reports/subtitle/metrics/<run>_subtitle_metrics.json` | 机器可读、便于对比 |
+| 运行日志 | `reports/subtitle/logs/<run>_subtitle_run.log` | 排错（可选 `tee`） |
 
 指标报告至少包含：**audio 时长、ASR/LLM wall time、segment 数、timing_source、p50/p95/max、>10s/>30s 条数、SRT 条目数**。
 
 完整 LLM benchmark 仍可用：
 
 ```bash
-pixi run benchmark -- --clip ... --report reports/... --srt-dir reports/srt ...
+pixi run benchmark -- --clip ... --report reports/benchmark/... --srt-dir reports/srt ...
 ```
 
 ### 结果回传（mag → Mac）

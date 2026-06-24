@@ -7,6 +7,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import time
 from contextlib import redirect_stdout
 from dataclasses import dataclass, field
@@ -19,7 +20,10 @@ DEFAULT_BIN = DEFAULT_CPP_ROOT / "build" / "bin" / "sense-voice-main"
 DEFAULT_MODEL = ROOT / "models" / "sense-voice-small-fp16.gguf"
 DEFAULT_OFFICIAL_MODEL = "iic/SenseVoiceSmall"
 DEFAULT_MERGE_LENGTH_S = 6
+DEFAULT_CHUNK_SECONDS = 600.0
 DEFAULT_MAX_SINGLE_SEGMENT_MS = 12_000
+
+from .audio import extract_audio_segment, get_audio_duration
 
 TAG_PATTERN = re.compile(r"<\|[^|]+\|>")
 TAG_GROUP_PATTERN = re.compile(r"((?:<\|[^|]+\|>)+)([^<]*)")
@@ -251,6 +255,20 @@ def _segments_from_char_timings(text: str, char_timings: list[dict[str, Any]]) -
             continue
 
         begin, end = span
+        if begin >= len(char_timings) or end > len(char_timings) or end <= begin:
+            segments.append(
+                {
+                    "start": char_timings[begin]["start"] if begin < len(char_timings) else None,
+                    "end": char_timings[-1]["end"] if char_timings else None,
+                    "lang": lang,
+                    "type": speech_type,
+                    "itn": itn,
+                    "emotion": ",".join(emotions) if emotions else None,
+                    "text": strip_tags(segment_text),
+                    "timing_confidence": "low",
+                }
+            )
+            continue
         segments.append(
             {
                 "start": char_timings[begin]["start"],
@@ -273,16 +291,29 @@ def _segments_from_char_timings(text: str, char_timings: list[dict[str, Any]]) -
         span = _find_char_span(char_stream, normalized, 0)
         if span:
             begin, end = span
+            if begin < len(char_timings) and end <= len(char_timings) and end > begin:
+                return [
+                    {
+                        "start": char_timings[begin]["start"],
+                        "end": char_timings[end - 1]["end"],
+                        "lang": None,
+                        "type": None,
+                        "itn": None,
+                        "emotion": None,
+                        "text": strip_tags(text),
+                        "timing_confidence": "high",
+                    }
+                ]
             return [
                 {
-                    "start": char_timings[begin]["start"],
-                    "end": char_timings[end - 1]["end"],
+                    "start": char_timings[0]["start"] if char_timings else None,
+                    "end": char_timings[-1]["end"] if char_timings else None,
                     "lang": None,
                     "type": None,
                     "itn": None,
                     "emotion": None,
                     "text": strip_tags(text),
-                    "timing_confidence": "high",
+                    "timing_confidence": "low",
                 }
             ]
     return []
@@ -347,26 +378,6 @@ def extract_official_segments(result: list[Any]) -> tuple[list[dict[str, Any]], 
     if segments:
         return segments, words, "tag_only"
     return [], words, "none"
-
-
-def get_audio_duration(path: str | Path) -> float:
-    """Return audio duration in seconds via ffprobe."""
-    result = subprocess.run(
-        [
-            "ffprobe",
-            "-v",
-            "error",
-            "-show_entries",
-            "format=duration",
-            "-of",
-            "default=noprint_wrappers=1:nokey=1",
-            str(path),
-        ],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return float(result.stdout.strip())
 
 
 def parse_transcript(stdout: str, *, with_timestamps: bool = True) -> str:
@@ -452,6 +463,7 @@ class SenseVoice:
         disable_update: bool = True,
         merge_length_s: float = DEFAULT_MERGE_LENGTH_S,
         max_single_segment_ms: int = DEFAULT_MAX_SINGLE_SEGMENT_MS,
+        chunk_seconds: float | None = DEFAULT_CHUNK_SECONDS,
     ) -> None:
         self.backend = (backend or os.environ.get("SENSE_VOICE_BACKEND", "official")).lower()
         if self.backend in {"cxx", "sensevoice.cpp", "sense-voice.cpp"}:
@@ -479,6 +491,7 @@ class SenseVoice:
         self.disable_update = disable_update
         self.merge_length_s = merge_length_s
         self.max_single_segment_ms = max_single_segment_ms
+        self.chunk_seconds = chunk_seconds
         self._official_model = None
 
     def _build_cpp_cmd(self, audio_path: str | Path) -> list[str]:
@@ -536,6 +549,152 @@ class SenseVoice:
             )
         return self._official_model
 
+    @staticmethod
+    def _offset_timing_items(items: list[dict[str, Any]], offset: float) -> list[dict[str, Any]]:
+        shifted: list[dict[str, Any]] = []
+        for item in items:
+            copy = dict(item)
+            if copy.get("start") is not None:
+                copy["start"] = float(copy["start"]) + offset
+            if copy.get("end") is not None:
+                copy["end"] = float(copy["end"]) + offset
+            shifted.append(copy)
+        return shifted
+
+    @staticmethod
+    def _merge_transcription_results(parts: list[TranscriptionResult]) -> TranscriptionResult:
+        if not parts:
+            raise ValueError("cannot merge empty transcription results")
+        if len(parts) == 1:
+            return parts[0]
+
+        texts = [part.text for part in parts if part.text]
+        sentences: list[dict[str, Any]] = []
+        words: list[dict[str, Any]] = []
+        raw_parts: list[Any] = []
+        timing_source = parts[0].timing_source
+        for part in parts:
+            sentences.extend(part.sentences)
+            words.extend(part.words)
+            try:
+                raw_parts.extend(json.loads(part.raw))
+            except json.JSONDecodeError:
+                raw_parts.append(part.raw)
+
+        return TranscriptionResult(
+            raw=json.dumps(raw_parts, ensure_ascii=False, default=str),
+            text="\n".join(texts).strip(),
+            audio_seconds=parts[-1].audio_seconds,
+            process_seconds=sum(part.process_seconds for part in parts),
+            sentences=sentences,
+            words=words,
+            timing_source=timing_source,
+        )
+
+    def _official_generate(self, audio_path: str | Path) -> list[Any]:
+        model = self._load_official_model()
+        with redirect_stdout(sys.stderr):
+            return model.generate(
+                input=str(audio_path),
+                cache={},
+                language=self.language,
+                use_itn=self.use_itn,
+                batch_size_s=60,
+                merge_vad=True,
+                merge_length_s=self.merge_length_s,
+                output_timestamp=True,
+            )
+
+    def _result_from_official_payload(
+        self,
+        result: list[Any],
+        *,
+        audio_seconds: float,
+        process_seconds: float,
+        time_offset: float = 0.0,
+    ) -> TranscriptionResult:
+        sentences, words, timing_source = extract_official_segments(result)
+        if time_offset:
+            sentences = self._offset_timing_items(sentences, time_offset)
+            words = self._offset_timing_items(words, time_offset)
+
+        texts: list[str] = []
+        for item in result:
+            if isinstance(item, dict):
+                texts.append(str(item.get("text", "")))
+        clean = "\n".join(text for text in texts if text).strip()
+        try:
+            from funasr.utils.postprocess_utils import rich_transcription_postprocess
+
+            clean = rich_transcription_postprocess(clean)
+        except Exception:
+            clean = strip_tags(clean)
+
+        return TranscriptionResult(
+            raw=json.dumps(result, ensure_ascii=False, default=str),
+            text=clean,
+            audio_seconds=audio_seconds,
+            process_seconds=process_seconds,
+            sentences=sentences,
+            words=words,
+            timing_source=timing_source,
+        )
+
+    def _transcribe_official_chunked(
+        self,
+        audio_path: str | Path,
+        *,
+        raw: bool,
+        audio_seconds: float,
+        started: float,
+    ) -> str | TranscriptionResult:
+        from .subtitle import get_silence_split_points
+
+        chunk_seconds = self.chunk_seconds or DEFAULT_CHUNK_SECONDS
+        points = get_silence_split_points(audio_path, segment_duration=chunk_seconds)
+        if len(points) < 2:
+            return self._transcribe_official(
+                audio_path,
+                raw=raw,
+                audio_seconds=audio_seconds,
+                started=started,
+            )
+
+        parts: list[TranscriptionResult] = []
+        with tempfile.TemporaryDirectory(prefix="sense-voice-chunk-") as tmpdir:
+            for index in range(len(points) - 1):
+                start, end = points[index], points[index + 1]
+                if end - start < 0.5:
+                    continue
+                chunk_path = Path(tmpdir) / f"chunk_{index:03d}.wav"
+                extract_audio_segment(audio_path, start, end, chunk_path)
+                chunk_started = time.perf_counter()
+                result = self._official_generate(chunk_path)
+                chunk_elapsed = time.perf_counter() - chunk_started
+                parts.append(
+                    self._result_from_official_payload(
+                        result,
+                        audio_seconds=audio_seconds,
+                        process_seconds=chunk_elapsed,
+                        time_offset=start,
+                    )
+                )
+
+        if not parts:
+            return self._transcribe_official(
+                audio_path,
+                raw=raw,
+                audio_seconds=audio_seconds,
+                started=started,
+            )
+
+        merged = self._merge_transcription_results(parts)
+        merged.process_seconds = time.perf_counter() - started
+        merged.audio_seconds = audio_seconds
+        if raw:
+            return merged
+        return merged.text
+
     def _transcribe_cpp(
         self,
         audio_path: str | Path,
@@ -578,46 +737,16 @@ class SenseVoice:
         audio_seconds: float,
         started: float,
     ) -> str | TranscriptionResult:
-        model = self._load_official_model()
-        with redirect_stdout(sys.stderr):
-            result = model.generate(
-                input=str(audio_path),
-                cache={},
-                language=self.language,
-                use_itn=self.use_itn,
-                batch_size_s=60,
-                merge_vad=True,
-                merge_length_s=self.merge_length_s,
-                output_timestamp=True,
-            )
+        result = self._official_generate(audio_path)
         process_seconds = time.perf_counter() - started
-
-        sentences, words, timing_source = extract_official_segments(result)
-
-        texts: list[str] = []
-        for item in result:
-            if isinstance(item, dict):
-                texts.append(str(item.get("text", "")))
-        clean = "\n".join(text for text in texts if text).strip()
-        try:
-            from funasr.utils.postprocess_utils import rich_transcription_postprocess
-
-            clean = rich_transcription_postprocess(clean)
-        except Exception:
-            clean = strip_tags(clean)
-
-        raw_text = json.dumps(result, ensure_ascii=False, default=str)
+        payload = self._result_from_official_payload(
+            result,
+            audio_seconds=audio_seconds,
+            process_seconds=process_seconds,
+        )
         if raw:
-            return TranscriptionResult(
-                raw=raw_text,
-                text=clean,
-                audio_seconds=audio_seconds,
-                process_seconds=process_seconds,
-                sentences=sentences,
-                words=words,
-                timing_source=timing_source,
-            )
-        return clean
+            return payload
+        return payload.text
 
     def transcribe(
         self,
@@ -630,6 +759,13 @@ class SenseVoice:
         audio_seconds = get_audio_duration(audio_path)
         started = time.perf_counter()
         if self.backend == "official":
+            if self.chunk_seconds and audio_seconds > self.chunk_seconds:
+                return self._transcribe_official_chunked(
+                    audio_path,
+                    raw=raw,
+                    audio_seconds=audio_seconds,
+                    started=started,
+                )
             return self._transcribe_official(
                 audio_path,
                 raw=raw,

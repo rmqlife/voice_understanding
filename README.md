@@ -95,7 +95,7 @@ pixi run extract-audio -- \
 ```bash
 pixi run benchmark -- \
   --clip test_voice_clips/vr_sample.wav \
-  --report reports/vr_audio_benchmark.md \
+  --report reports/benchmark/vr_audio_benchmark.md \
   --asr-backend official \
   --asr-device cuda:0 \
   --model nsfw-local:27b \

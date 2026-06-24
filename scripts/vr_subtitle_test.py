@@ -14,8 +14,11 @@ sys.path.insert(0, str(ROOT / "python"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 import benchmark_voice_llm as bvl  # noqa: E402
-from sense_voice.subtitle import build_asr_srt_entries, build_zh_srt_entries  # noqa: E402
+from sense_voice.audio import ffprobe_duration, max_timestamp_seconds  # noqa: E402
+from sense_voice.llm import build_llm_input, chunk_text, generate_by_chunk, polish_prompt, stop_ollama_models  # noqa: E402
+from sense_voice.segments import format_timeline, parse_asr_segments, segment_duration_stats  # noqa: E402
 from sense_voice.srt import write_srt  # noqa: E402
+from sense_voice.subtitle import build_asr_srt_entries, build_zh_srt_entries  # noqa: E402
 
 
 DEFAULT_SRT_DIR = ROOT / "reports" / "srt"
@@ -90,7 +93,7 @@ def process_clip(
     srt_dir: Path,
     skip_polish: bool,
 ) -> dict[str, object]:
-    bvl.stop_ollama_models([polish_model])
+    stop_ollama_models([polish_model])
     asr_text, raw, result_audio_seconds, asr_seconds, stderr, asr_payload = bvl.run_asr(
         audio,
         language,
@@ -101,20 +104,20 @@ def process_clip(
     audio_seconds = (
         float(result_audio_seconds)
         if result_audio_seconds is not None
-        else bvl.max_timestamp_seconds(raw) or bvl.ffprobe_duration(audio)
+        else max_timestamp_seconds(raw) or ffprobe_duration(audio)
     )
-    segments = bvl.parse_asr_segments(raw, asr_text, audio_seconds, asr_payload=asr_payload)
+    segments = parse_asr_segments(raw, asr_text, audio_seconds, asr_payload=asr_payload)
     raw_segments = len(segments)
     words = asr_payload.get("words") if isinstance(asr_payload.get("words"), list) else []
-    duration_stats = bvl.segment_duration_stats(segments)
-    timeline = bvl.format_timeline(segments)
-    llm_input = bvl.build_llm_input(
+    duration_stats = segment_duration_stats(segments)
+    timeline = format_timeline(segments)
+    llm_input = build_llm_input(
         segments,
         timeline,
         llm_timeline=llm_timeline,
         drop_language_artifacts=False,
     )
-    chunks = bvl.chunk_text(llm_input, chunk_chars)
+    chunks = chunk_text(llm_input, chunk_chars)
 
     stem = audio.stem
     asr_srt_path = srt_dir / f"{stem}.asr.srt"
@@ -128,10 +131,10 @@ def process_clip(
         zh_entries = asr_entries
         write_srt(zh_srt_path, zh_entries)
     else:
-        polished, polish_seconds = bvl.generate_by_chunk(
+        polished, polish_seconds = generate_by_chunk(
             polish_model,
             chunks,
-            lambda chunk: bvl.polish_prompt(chunk, profile),
+            lambda chunk: polish_prompt(chunk, profile),
         )
         zh_entries = build_zh_srt_entries(polished, segments, words)
         write_srt(zh_srt_path, zh_entries)

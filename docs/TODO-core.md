@@ -12,26 +12,24 @@ ASR、音频预处理、LLM 调用——**字幕线与转写线共用**。功能
 
 ## P0 — 代码整理（减少 duplicate）
 
-- [ ] **抽出 `python/sense_voice/llm.py`**
-  - 从 `benchmark_voice_llm.py` 迁：`ollama_generate`, `chunk_text`, `generate_by_chunk`, `stop_ollama_models`
-  - `polish_prompt` 按 profile 留各产品入口调用，或拆 `llm/prompts.py`
-- [ ] **统一 segment 解析**
-  - `parse_asr_segments` 目前在 `benchmark_voice_llm.py`；应迁入 `transcribe.py` 或 `sense_voice/segments.py`
-- [ ] **统一音频时长**
-  - `ffprobe_duration` / `max_timestamp_seconds` 抽到 `sense_voice/audio.py`
+- [x] **抽出 `python/sense_voice/llm.py`**
+- [x] **统一 segment 解析** → `python/sense_voice/segments.py`
+- [x] **统一音频时长** → `python/sense_voice/audio.py`
 
 ## P1 — ASR 能力
 
-- [ ] 长音频分块 ASR + 拼接（`get_silence_split_points` 接入 `transcribe`）
-- [ ] `sv.py` 支持批量目录、进度日志
-- [ ] 文档化 backend：`official`（main/mag）vs `cpp`（`mac` 分支），见 [`REFERENCE.md`](REFERENCE.md)
+- [x] 长音频分块 ASR + 拼接（`get_silence_split_points` + `extract_audio_segment` 接入 `transcribe.py`，默认 600s）
+- [x] `sv.py` 支持批量目录（`--clips`）、进度日志（`[i/n]`）
+- [x] 文档化 backend：见 [`REFERENCE.md`](REFERENCE.md)
 
 ## P2 — 模型与部署
 
-- [ ] mag 上模型缓存路径约定（`~/.cache/modelscope`）
-- [ ] 可选：说话人相关模型预下载（为 Transcript 线做准备，见 `TODO-transcript.md`）
+- [x] mag 上模型缓存路径约定 → [`docs/MODELS.md`](MODELS.md) + `python/sense_voice/models.py`
+- [x] 说话人模型预下载 → `pixi run download-transcript-models`
 
 ## 验收
 
 - `pixi run sv <audio> -l zh --backend official --output-format json` 稳定返回 `words` + `sentences`
+- `pixi run sv --clips test_voice_clips` 批量带进度
 - 字幕 / 转写脚本均只通过 Core API 调 ASR，不重复实现解析逻辑
+- Mac 本地：`pixi run test-srt` + `pixi run test-transcript` 通过（无 GPU）

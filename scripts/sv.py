@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "python"))
 from sense_voice import SenseVoice
 
 WAV_EXTS = {".wav", ".wave"}
+AUDIO_EXTS = {".wav", ".wave", ".mp3", ".m4a", ".flac", ".aac", ".ogg"}
 
 
 def to_wav(src: Path) -> tuple[Path, bool]:
@@ -44,12 +45,82 @@ def to_wav(src: Path) -> tuple[Path, bool]:
     return tmp, True
 
 
+def collect_inputs(args: argparse.Namespace) -> list[Path]:
+    if args.clips:
+        files = sorted(
+            path
+            for path in args.clips.iterdir()
+            if path.suffix.lower() in AUDIO_EXTS
+        )
+        if args.name_filter:
+            files = [path for path in files if args.name_filter.lower() in path.name.lower()]
+        return files
+    return [Path(path) for path in args.audio]
+
+
+def transcribe_one(
+    src: Path,
+    *,
+    sv: SenseVoice,
+    args: argparse.Namespace,
+    index: int,
+    total: int,
+) -> None:
+    if not src.is_file():
+        print(f"[{index}/{total}] missing: {src}", file=sys.stderr)
+        return
+
+    print(f"[{index}/{total}] {src.name}", file=sys.stderr, flush=True)
+    wav, cleanup = to_wav(src)
+    try:
+        result = sv.transcribe(
+            wav,
+            raw=True,
+            with_timestamps=not args.no_timestamps,
+        )
+        if args.output_format == "json":
+            payload = result.to_json_dict()
+            payload["source"] = src.name
+            print(json.dumps(payload, ensure_ascii=False), flush=True)
+        else:
+            print(f"### {src.name}", flush=True)
+            print(result.text, flush=True)
+            if index < total:
+                print(flush=True)
+        if not args.quiet:
+            print(
+                f"  audio {result.audio_seconds:.1f}s | "
+                f"process {result.process_seconds:.1f}s | "
+                f"rtf {result.rtf:.3f}",
+                file=sys.stderr,
+                flush=True,
+            )
+    finally:
+        if cleanup:
+            wav.unlink(missing_ok=True)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="sv",
         description="Transcribe audio to text (wav, mp3, m4a, flac, ...)",
     )
-    parser.add_argument("audio", help="Input audio file")
+    parser.add_argument(
+        "audio",
+        nargs="*",
+        help="Input audio file(s). Omit when using --clips.",
+    )
+    parser.add_argument(
+        "--clips",
+        type=Path,
+        default=None,
+        help="Directory of audio files to transcribe in batch",
+    )
+    parser.add_argument(
+        "--name-filter",
+        default="",
+        help="When using --clips, only process filenames containing this substring",
+    )
     parser.add_argument(
         "--backend",
         choices=["cpp", "official"],
@@ -90,50 +161,37 @@ def main() -> None:
         default="text",
         help="Output plain text or machine-readable transcription result",
     )
+    parser.add_argument(
+        "--chunk-seconds",
+        type=float,
+        default=None,
+        help="Chunk long audio at silence boundaries (official backend). 0 disables.",
+    )
     args = parser.parse_args()
 
-    src = Path(args.audio)
-    if not src.is_file():
-        print(f"file not found: {src}", file=sys.stderr)
+    inputs = collect_inputs(args)
+    if not inputs:
+        print("no audio files found", file=sys.stderr)
         sys.exit(1)
 
-    wav, cleanup = to_wav(src)
-    try:
-        sv = SenseVoice(
-            model_path=args.model,
-            threads=args.threads,
-            use_gpu=not args.cpu,
-            language=args.language,
-            use_itn=not args.no_punct,
-            backend=args.backend,
-            device=args.device,
-        )
-        result = sv.transcribe(
-            wav,
-            raw=True,
-            with_timestamps=not args.no_timestamps,
-        )
-        if args.output_format == "json":
-            print(
-                json.dumps(
-                    result.to_json_dict(),
-                    ensure_ascii=False,
-                ),
-                flush=True,
-            )
-        else:
-            print(result.text, flush=True)
-        if not args.quiet:
-            print(
-                f"\n音频 {result.audio_seconds:.1f}s | "
-                f"处理 {result.process_seconds:.1f}s | "
-                f"RTF {result.rtf:.3f}",
-                file=sys.stderr,
-                flush=True,
-            )
-    finally:
-        if cleanup:
-            wav.unlink(missing_ok=True)
+    chunk_seconds = args.chunk_seconds
+    if chunk_seconds is not None and chunk_seconds <= 0:
+        chunk_seconds = None
+
+    sv = SenseVoice(
+        model_path=args.model,
+        threads=args.threads,
+        use_gpu=not args.cpu,
+        language=args.language,
+        use_itn=not args.no_punct,
+        backend=args.backend,
+        device=args.device,
+        chunk_seconds=chunk_seconds,
+    )
+
+    total = len(inputs)
+    for index, src in enumerate(inputs, start=1):
+        transcribe_one(src, sv=sv, args=args, index=index, total=total)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,927 @@
+# Diarization Compare
+
+- Run: `diarize_compare_pyannote`
+- Date: 2026-06-24 15:27:58
+
+| Clip | Audio s | funasr turns | funasr spk | pyannote turns | pyannote spk |
+|---|---:|---:|---:|---:|---:|
+| 微信录音 耿瑞香_20250326090128_45748064860651968.aac | 142.3 | 75 | 2 | 31 | 2 |
+| 2026-04-02-diary.wav | 64.4 | 26 | 1 | 13 | 1 |
+
+## 微信录音 耿瑞香_20250326090128_45748064860651968.aac
+
+### funasr
+
+```json
+{
+  "speaker_count": 2,
+  "turn_count": 75,
+  "turns": [
+    {
+      "speaker": "SPEAKER_00",
+      "start": 0.56,
+      "end": 2.46,
+      "duration": 1.9
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2.98,
+      "end": 4.48,
+      "duration": 1.5
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 4.48,
+      "end": 6.18,
+      "duration": 1.7
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 6.36,
+      "end": 9.34,
+      "duration": 2.98
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 9.34,
+      "end": 10.9,
+      "duration": 1.56
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 11.28,
+      "end": 15.6,
+      "duration": 4.32
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 15.82,
+      "end": 19.84,
+      "duration": 4.02
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 20.24,
+      "end": 21.82,
+      "duration": 1.58
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 21.82,
+      "end": 22.46,
+      "duration": 0.64
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 22.46,
+      "end": 23.38,
+      "duration": 0.92
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 23.38,
+      "end": 27.88,
+      "duration": 4.5
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 28.7,
+      "end": 31.7,
+      "duration": 3.0
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 31.7,
+      "end": 32.18,
+      "duration": 0.48
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 32.18,
+      "end": 34.62,
+      "duration": 2.44
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 34.62,
+      "end": 35.34,
+      "duration": 0.72
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 35.34,
+      "end": 37.0,
+      "duration": 1.66
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 37.0,
+      "end": 38.14,
+      "duration": 1.14
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 38.14,
+      "end": 39.14,
+      "duration": 1.0
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 39.14,
+      "end": 39.9,
+      "duration": 0.76
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 39.9,
+      "end": 42.02,
+      "duration": 2.12
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 42.02,
+      "end": 42.7,
+      "duration": 0.68
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 42.7,
+      "end": 44.92,
+      "duration": 2.22
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 45.42,
+      "end": 47.66,
+      "duration": 2.24
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 47.66,
+      "end": 49.16,
+      "duration": 1.5
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 49.16,
+      "end": 50.0,
+      "duration": 0.84
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 50.0,
+      "end": 51.3,
+      "duration": 1.3
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 51.3,
+      "end": 52.1,
+      "duration": 0.8
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 52.1,
+      "end": 53.1,
+      "duration": 1.0
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 53.68,
+      "end": 54.84,
+      "duration": 1.16
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 54.84,
+      "end": 56.46,
+      "duration": 1.62
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 56.46,
+      "end": 57.0,
+      "duration": 0.54
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 58.1,
+      "end": 59.68,
+      "duration": 1.58
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 59.72,
+      "end": 61.01,
+      "duration": 1.29
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 61.01,
+      "end": 63.43,
+      "duration": 2.42
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 63.49,
+      "end": 64.21,
+      "duration": 0.72
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 64.21,
+      "end": 65.01,
+      "duration": 0.8
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 65.01,
+      "end": 66.63,
+      "duration": 1.62
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 66.63,
+      "end": 68.49,
+      "duration": 1.86
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 68.55,
+      "end": 69.69,
+      "duration": 1.14
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 69.69,
+      "end": 72.1,
+      "duration": 2.41
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 72.22,
+      "end": 73.64,
+      "duration": 1.42
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 74.53,
+      "end": 74.77,
+      "duration": 0.24
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 75.11,
+      "end": 78.25,
+      "duration": 3.14
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 78.27,
+      "end": 80.09,
+      "duration": 1.82
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 80.09,
+      "end": 82.91,
+      "duration": 2.82
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 82.91,
+      "end": 86.62,
+      "duration": 3.72
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 87.15,
+      "end": 87.51,
+      "duration": 0.36
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 87.51,
+      "end": 89.72,
+      "duration": 2.21
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 90.05,
+      "end": 92.19,
+      "duration": 2.14
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 92.19,
+      "end": 95.19,
+      "duration": 3.0
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 95.19,
+      "end": 98.42,
+      "duration": 3.23
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 100.55,
+      "end": 101.23,
+      "duration": 0.68
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 101.25,
+      "end": 102.81,
+      "duration": 1.56
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 102.81,
+      "end": 104.89,
+      "duration": 2.08
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 106.11,
+      "end": 106.73,
+      "duration": 0.62
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 106.73,
+      "end": 109.25,
+      "duration": 2.52
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 109.27,
+      "end": 109.91,
+      "duration": 0.64
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 109.91,
+      "end": 110.81,
+      "duration": 0.9
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 112.19,
+      "end": 112.97,
+      "duration": 0.78
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 112.97,
+      "end": 113.77,
+      "duration": 0.8
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 113.91,
+      "end": 114.63,
+      "duration": 0.72
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 114.63,
+      "end": 116.45,
+      "duration": 1.83
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 117.92,
+      "end": 119.46,
+      "duration": 1.54
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 119.78,
+      "end": 121.0,
+      "duration": 1.22
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 121.38,
+      "end": 122.25,
+      "duration": 0.88
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 123.14,
+      "end": 123.81,
+      "duration": 0.67
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 124.52,
+      "end": 126.48,
+      "duration": 1.96
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 126.48,
+      "end": 128.16,
+      "duration": 1.68
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 128.18,
+      "end": 128.8,
+      "duration": 0.62
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 128.8,
+      "end": 130.34,
+      "duration": 1.54
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 130.34,
+      "end": 132.74,
+      "duration": 2.4
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 132.74,
+      "end": 133.82,
+      "duration": 1.08
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 133.82,
+      "end": 134.96,
+      "duration": 1.14
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 135.08,
+      "end": 137.28,
+      "duration": 2.2
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 137.34,
+      "end": 138.5,
+      "duration": 1.16
+    }
+  ]
+}
+```
+
+### pyannote
+
+```json
+{
+  "speaker_count": 2,
+  "turn_count": 31,
+  "turns": [
+    {
+      "speaker": "SPEAKER_00",
+      "start": 0.6,
+      "end": 0.98,
+      "duration": 0.37
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 2.28,
+      "end": 2.55,
+      "duration": 0.27
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2.55,
+      "end": 2.58,
+      "duration": 0.03
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 2.98,
+      "end": 20.03,
+      "duration": 17.04
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 20.1,
+      "end": 28.41,
+      "duration": 8.32
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 27.0,
+      "end": 27.1,
+      "duration": 0.1
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 28.72,
+      "end": 38.39,
+      "duration": 9.67
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 38.2,
+      "end": 40.13,
+      "duration": 1.92
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 40.02,
+      "end": 44.87,
+      "duration": 4.84
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 45.39,
+      "end": 57.17,
+      "duration": 11.78
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 48.56,
+      "end": 49.07,
+      "duration": 0.51
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 58.1,
+      "end": 63.46,
+      "duration": 5.37
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 63.46,
+      "end": 70.77,
+      "duration": 7.31
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 71.85,
+      "end": 73.61,
+      "duration": 1.75
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 74.5,
+      "end": 96.51,
+      "duration": 22.01
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 98.01,
+      "end": 98.53,
+      "duration": 0.52
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 100.59,
+      "end": 101.26,
+      "duration": 0.67
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 101.25,
+      "end": 104.37,
+      "duration": 3.12
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 106.09,
+      "end": 110.68,
+      "duration": 4.59
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 109.06,
+      "end": 110.29,
+      "duration": 1.23
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 112.11,
+      "end": 113.77,
+      "duration": 1.65
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 113.94,
+      "end": 116.49,
+      "duration": 2.55
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 117.92,
+      "end": 122.26,
+      "duration": 4.34
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 123.13,
+      "end": 131.18,
+      "duration": 8.05
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 125.38,
+      "end": 127.08,
+      "duration": 1.7
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 130.8,
+      "end": 130.86,
+      "duration": 0.07
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 130.93,
+      "end": 131.0,
+      "duration": 0.07
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 131.08,
+      "end": 137.02,
+      "duration": 5.94
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 134.63,
+      "end": 135.64,
+      "duration": 1.01
+    },
+    {
+      "speaker": "SPEAKER_01",
+      "start": 137.06,
+      "end": 137.39,
+      "duration": 0.34
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 137.07,
+      "end": 138.41,
+      "duration": 1.33
+    }
+  ]
+}
+```
+
+## 2026-04-02-diary.wav
+
+### funasr
+
+```json
+{
+  "speaker_count": 1,
+  "turn_count": 26,
+  "turns": [
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1.06,
+      "end": 2.6,
+      "duration": 1.54
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 3.58,
+      "end": 5.42,
+      "duration": 1.84
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 6.5,
+      "end": 9.28,
+      "duration": 2.78
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 9.48,
+      "end": 10.82,
+      "duration": 1.34
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 11.44,
+      "end": 12.98,
+      "duration": 1.54
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 13.06,
+      "end": 13.76,
+      "duration": 0.7
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 13.84,
+      "end": 14.6,
+      "duration": 0.76
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 15.16,
+      "end": 16.44,
+      "duration": 1.28
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 16.92,
+      "end": 21.3,
+      "duration": 4.38
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 21.3,
+      "end": 23.54,
+      "duration": 2.24
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 23.54,
+      "end": 26.52,
+      "duration": 2.98
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 26.52,
+      "end": 28.9,
+      "duration": 2.38
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 28.9,
+      "end": 29.14,
+      "duration": 0.24
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 30.12,
+      "end": 31.36,
+      "duration": 1.24
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 31.36,
+      "end": 32.56,
+      "duration": 1.2
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 32.56,
+      "end": 32.8,
+      "duration": 0.24
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 33.42,
+      "end": 39.02,
+      "duration": 5.6
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 39.02,
+      "end": 40.82,
+      "duration": 1.8
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 40.94,
+      "end": 42.98,
+      "duration": 2.04
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 42.98,
+      "end": 44.84,
+      "duration": 1.86
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 45.22,
+      "end": 50.04,
+      "duration": 4.82
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 50.04,
+      "end": 51.18,
+      "duration": 1.14
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 51.36,
+      "end": 52.08,
+      "duration": 0.72
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 54.07,
+      "end": 58.27,
+      "duration": 4.2
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 58.41,
+      "end": 61.55,
+      "duration": 3.15
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 63.14,
+      "end": 64.03,
+      "duration": 0.89
+    }
+  ]
+}
+```
+
+### pyannote
+
+```json
+{
+  "speaker_count": 1,
+  "turn_count": 13,
+  "turns": [
+    {
+      "speaker": "SPEAKER_00",
+      "start": 1.01,
+      "end": 11.24,
+      "duration": 10.23
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 11.27,
+      "end": 14.63,
+      "duration": 3.36
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 15.1,
+      "end": 16.47,
+      "duration": 1.37
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 16.99,
+      "end": 21.75,
+      "duration": 4.76
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 22.2,
+      "end": 26.9,
+      "duration": 4.69
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 26.96,
+      "end": 29.26,
+      "duration": 2.3
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 30.1,
+      "end": 32.72,
+      "duration": 2.62
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 33.46,
+      "end": 33.93,
+      "duration": 0.47
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 35.62,
+      "end": 52.39,
+      "duration": 16.77
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 54.0,
+      "end": 57.25,
+      "duration": 3.26
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 57.56,
+      "end": 58.96,
+      "duration": 1.4
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 59.52,
+      "end": 61.69,
+      "duration": 2.18
+    },
+    {
+      "speaker": "SPEAKER_00",
+      "start": 63.16,
+      "end": 64.07,
+      "duration": 0.91
+    }
+  ]
+}
+```

@@ -417,7 +417,7 @@
 cd ~/work/voice_understanding && git pull
 pixi run vr-subtitle-test -- \
   --clips test_voice_clips --name-filter kavr \
-  --report reports/kavr_p1_subtitle_metrics.md \
+  --report reports/subtitle/metrics/kavr_p1_subtitle_metrics.md \
   --run-label my_run \
   --asr-backend official --asr-device cuda:0 \
   --polish-model nsfw-local:27b --language ja --profile subtitle

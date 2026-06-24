@@ -1,0 +1,4 @@
+✨ Pixi task (vr-subtitle-test): python scripts/vr_subtitle_test.py --clips test_voice_clips --name-filter kavr --report reports/kavr_p1_subtitle_metrics.md --run-label kavr_p1_refine_realign --asr-backend official --asr-device cuda:0 --polish-model nsfw-local:27b --language ja --profile subtitle --chunk-chars 3000 --llm-timeline compact: (VR ASR metrics + ASR/ZH SRT export)
+Processing test_voice_clips/vr_kavr500_part3.wav
+Wrote reports/kavr_p1_subtitle_metrics.md
+Wrote reports/kavr_p1_subtitle_metrics.json

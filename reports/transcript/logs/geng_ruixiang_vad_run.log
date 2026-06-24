@@ -1,0 +1,6 @@
+✨ Pixi task (transcript-test): python scripts/transcript_test.py --clip test_voice_clips/微信录音 耿瑞香_20250326090128_45748064860651968.aac --diarize-method vad --skip-polish --run-label geng_ruixiang_vad --asr-backend official --asr-device cuda:0 --language zh --report reports/transcript/geng_ruixiang_vad_metrics.md: (Speaker diarization + transcript md/json export)
+Processing test_voice_clips/微信录音 耿瑞香_20250326090128_45748064860651968.aac
+Wrote reports/transcript/geng_ruixiang_vad_metrics.md
+Wrote reports/transcript/geng_ruixiang_vad_metrics.json
+Wrote reports/transcript/微信录音 耿瑞香_20250326090128_45748064860651968.md
+Wrote reports/transcript/微信录音 耿瑞香_20250326090128_45748064860651968.json

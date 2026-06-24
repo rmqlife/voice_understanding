@@ -1,6 +1,6 @@
 # Transcript 转写 / Polish TODO
 
-**目标**：电话、微信语音等多人对话 → **按说话人**整理成可读文稿。不烧录字幕，不追求毫秒级时间轴。
+**目标**：电话、微信语音等多人对话 → **按说话人、按时间顺序**整理成可读文稿。不烧录字幕，不追求毫秒级时间轴。
 
 样例：`test_voice_clips/微信录音 耿瑞香_*.aac`、`景宜_*.aac`、`talk_to_mom.aac`
 
@@ -8,57 +8,122 @@
 
 | 做 | 不做 |
 |----|------|
-| 说话人 turn 切分 | SRT / `split_entries_for_display` |
-| 同一人连续句合并 | 润色后字符时间回对齐 |
+| 说话人 turn 切分（声纹 / cam++） | SRT / `split_entries_for_display` |
+| 同一人**相邻** turn 合并 | 润色后字符时间回对齐 |
+| 按时间线导出 turn | 把同 label 揉成两个大段落 |
 | 全文 / 分段 polish | 翻译（除非单独开 profile） |
 | 可选粗时间（turn 起止） | 帧级字幕对齐 |
 
-## P0 — 技术选型与 spike
+## Diarization 方案（澄清命名）
 
-- [ ] **说话人分离方案对比**（mag 上小样本）
-  - A: FunASR / ModelScope 说话人相关 pipeline
-  - B: pyannote.audio
-  - C: 仅 VAD + 能量切 turn（无 diarization，两人对话先手动标）
-  - 验收：耿瑞香 142s 样本能分出 ≥2 个 speaker turn 序列（允许标 `SPEAKER_00`）
-- [ ] **输出格式约定**
-  ```markdown
-  ## 说话人 A
-  文本段落…
+| CLI `--diarize-method` | 实际用的 | 用途 |
+|------------------------|----------|------|
+| `funasr`（**默认主路径**） | FunASR `fsmn-vad` + `cam++` | 真·说话人 turn |
+| `pyannote` | `pyannote/speaker-diarization-3.1` | 对比 / 细粒度 turn（需 `HF_TOKEN`） |
+| `auto` | 同 `funasr`；失败才 fallback | 日常测试 |
+| `ffmpeg-alternate` | **ffmpeg `silencedetect`** + 奇偶 `SPEAKER_00/01` | 仅 debug baseline，**不是 FunASR VAD** |
+| ~~`vad`~~ | → `ffmpeg-alternate` 别名（废弃） | 旧参数兼容 |
 
-  ## 说话人 B
-  文本段落…
-  ```
-  机器可读：`reports/transcript/<clip>.json` → `[{speaker, start?, end?, text}]`
+**已有、不重复下载的 VAD：**
 
-## P1 — 最小 pipeline
+- `pixi run sv --backend official`：`transcribe.py` 里 FunASR `fsmn-vad`（**只服务 ASR 切句**）
+- `diarize_funasr()`：同一套 `fsmn-vad` + `cam++`（**服务说话人**）
+- `ffmpeg silencedetect`：仅 `ffmpeg-alternate` / `get_silence_split_points`（**不是模型**）
 
-- [ ] `python/sense_voice/diarize.py` — turn 列表 `{speaker, start, end}`
-- [ ] `python/sense_voice/transcript.py`
-  - 按 turn 调 ASR（或全量 ASR + 时间归属）
-  - `merge_adjacent_turns(same_speaker=True)`
-  - `write_transcript_md` / `write_transcript_json`
-- [ ] `scripts/transcript_test.py` + `pixi run transcript-test`
-- [ ] LLM **`transcript` profile**（`llm.py` / prompts）
-  - 去口癖、纠错、分段；**输入输出均不带 SRT 时间戳**
-  - 保持 speaker 标签不变
+## P0 — spike 结论（耿瑞香 142s）
+
+- [x] FunASR `cam++` 能出 ≥2 speaker（`geng_ruixiang_p0`：13 turns）
+- [x] `ffmpeg-alternate` **不能**当 diarization（一人长段 + 多停顿 → 假两人 + 内容重复）
+- [ ] **重跑验收**（pipeline 修完后）：`~1:52`「你要上班 / 上什么班呢」必须在**相邻两个 turn、两个 speaker**
+
+## P1 — pipeline 修复
+
+- [x] **去掉默认 `consolidate_turns_by_speaker`**（改为按时间线多 turn 导出；consolidate 仅 opt-in）
+- [x] **`assign_segments_to_turns`：按重叠面积归属，每句只归一个 turn**
+- [x] **导出格式带粗时间**：`## Turn N · SPEAKER_xx [mm:ss-mm:ss]`
+- [x] **polish 按 turn 编号回写**（`## Turn N · …`）
+- [x] **`vad` → `ffmpeg-alternate`**；默认 `--diarize-method funasr`
+- [x] **mag 重跑耿瑞香**（`geng_ruixiang_p1`：funasr，6 turns / 2 speakers）
+- [ ] **锚点 ~1:52 未达标**（三种 diarization 均失败，见下方 P2）
+- [ ] **字级时间戳 + 短停顿二次切分**：ASR `words[]` 在 `，`/`？` 处拆句，再按 diarization 重叠重分配 speaker（耿瑞香 ~1:52 验收）
+
+## P2 — 快问快答细切（耿瑞香锚点）
+
+实验结论（2026-06-24）：funasr / pyannote / pyannote-exclusive 均把「你要上班」「上什么班呢」留在同一 Turn；ASR 字级仅间隔 ~1s，需 turn 内二次切分而非换 diarization 后端。
+
+- [ ] `split_turns_on_word_pauses()`：turn 内按 `words[]` + 标点/停顿拆句
+- [ ] 拆句后按时间重叠把子句重映射到 speaker（或相邻 turn 边界）
+- [ ] 耿瑞香 ~1:52 锚点回归测试
 
 ## P2 — Polish 质量
 
-- [ ] 耿瑞香 / 景宜样本人工抽检：说话人归属准确率、文本可读性
-- [ ] 可选：说话人命名（LLM 根据内容猜「物业」「业主」— 低优先级）
-- [ ] 可选：会议纪要摘要（单独 profile，不混入 transcript）
+- [x] `python/sense_voice/diarize.py`
+- [x] `python/sense_voice/transcript.py`（待按上表修）
+- [x] `scripts/transcript_test.py` + `pixi run transcript-test`
+- [x] `pixi run test-transcript` 本地 smoke
 
-## P3 — 与字幕线复用
+## P1 — 已完成（上一轮）
 
-- [ ] 同一段录音：字幕线出 SRT，转写线出 md — **两条命令、两种报告目录**
-  - `reports/srt/` vs `reports/transcript/`
-- [ ] Core ASR 只跑一次时的缓存接口（避免双线测试重复 GPU）
+- [ ] 耿瑞香 / 景宜人工抽检
+- [x] **pyannote.audio 对比** — `diarize_pyannote()` + `pixi run compare-diarize`
+- [x] **可选说话人命名** — `--name-speakers` + `speaker_names.py`
+- [ ] 可选：会议纪要摘要（单独 profile）
+
+## mag 测试命令
+
+```bash
+cd /home/rmqlife/work/voice_understanding
+git pull   # 或 rsync 最新 python/scripts
+
+# 主路径：FunASR cam++（不要用 vad / ffmpeg-alternate 验收）
+pixi run transcript-test -- \
+  --clip "test_voice_clips/微信录音 耿瑞香_20250326090128_45748064860651968.aac" \
+  --diarize-method funasr \
+  --asr-backend official --asr-device cuda:0 \
+  --language zh --skip-polish \
+  --run-label geng_ruixiang_p1 \
+  --report reports/transcript/geng_ruixiang_p1_metrics.md \
+  2>&1 | tee reports/transcript/logs/geng_ruixiang_p1_run.log
+
+# 对比 funasr vs pyannote（需 HF_TOKEN）
+pixi run compare-diarize -- \
+  --clip "test_voice_clips/微信录音 耿瑞香_20250326090128_45748064860651968.aac" \
+  --report reports/transcript/geng_diarize_compare.md
+
+# 说话人命名（LLM）
+pixi run transcript-test -- \
+  --clip "test_voice_clips/微信录音 耿瑞香_....aac" \
+  --name-speakers --name-speakers-model nsfw-local:27b \
+  --skip-polish
+```
+
+Mac：`pixi run sync-reports-from-mag`
+
+### pyannote 对比（耿瑞香 + diary）
+
+```bash
+export HF_TOKEN=...   # 需先 pixi run install-diarize 并在 HF 接受条款
+pixi run compare-diarize -- \
+  --clip "test_voice_clips/微信录音 耿瑞香_20250326090128_45748064860651968.aac" \
+  --clip test_voice_clips/2026-04-02-diary.wav \
+  --device cuda:0 \
+  --report reports/transcript/diarize_compare.md
+```
+
+### 说话人命名
+
+```bash
+pixi run transcript-test -- \
+  --clip "test_voice_clips/微信录音 耿瑞香_....aac" \
+  --name-speakers --name-speakers-model nsfw-local:27b \
+  --skip-polish
+```
 
 ## 验收标准（耿瑞香 142s）
 
 | 指标 | 目标 |
 |------|------|
-| 说话人 turn 数 | 与听感一致（允许 2–4 人） |
-| 同一人一句话被拆到两个 speaker | 明显错误 < 5% |
-| polish 后文本 | 无大面积 ASR 粘连，段落可读 |
-| 产出 | `reports/transcript/<clip>.md` + `.json` |
+| 主路径 | `funasr` / `auto`，不用 `ffmpeg-alternate` 判合格 |
+| 锚点 ~1:52 | 「你要上班」与「上什么班呢」分属相邻 turn、不同 speaker |
+| 同一句不重复出现在两个 speaker 大段 | 明显错误 < 5% |
+| 产出 | `reports/transcript/<clip>.md` + `.json`（turn 按时间排序） |
