@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import subprocess
 import sys
 import tempfile
@@ -49,6 +50,22 @@ def main() -> None:
         description="Transcribe audio to text (wav, mp3, m4a, flac, ...)",
     )
     parser.add_argument("audio", help="Input audio file")
+    parser.add_argument(
+        "--backend",
+        choices=["cpp", "official"],
+        default=None,
+        help="ASR backend: cpp for SenseVoice.cpp, official for FunASR",
+    )
+    parser.add_argument(
+        "--device",
+        default=None,
+        help="Official backend device, e.g. cuda:0 or cpu",
+    )
+    parser.add_argument(
+        "--model",
+        default=None,
+        help="Model path/name. Defaults to GGUF for cpp and iic/SenseVoiceSmall for official.",
+    )
     parser.add_argument("-l", "--language", default="zh", help="Language (auto/zh/en/...)")
     parser.add_argument("-t", "--threads", type=int, default=4, help="CPU threads")
     parser.add_argument("--cpu", action="store_true", help="Disable Metal GPU")
@@ -67,6 +84,12 @@ def main() -> None:
         action="store_true",
         help="Hide timing summary",
     )
+    parser.add_argument(
+        "--output-format",
+        choices=["text", "json"],
+        default="text",
+        help="Output plain text or machine-readable transcription result",
+    )
     args = parser.parse_args()
 
     src = Path(args.audio)
@@ -77,17 +100,29 @@ def main() -> None:
     wav, cleanup = to_wav(src)
     try:
         sv = SenseVoice(
+            model_path=args.model,
             threads=args.threads,
             use_gpu=not args.cpu,
             language=args.language,
             use_itn=not args.no_punct,
+            backend=args.backend,
+            device=args.device,
         )
         result = sv.transcribe(
             wav,
             raw=True,
             with_timestamps=not args.no_timestamps,
         )
-        print(result.text, flush=True)
+        if args.output_format == "json":
+            print(
+                json.dumps(
+                    result.to_json_dict(),
+                    ensure_ascii=False,
+                ),
+                flush=True,
+            )
+        else:
+            print(result.text, flush=True)
         if not args.quiet:
             print(
                 f"\n音频 {result.audio_seconds:.1f}s | "
