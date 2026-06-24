@@ -1,7 +1,7 @@
 [workspace]
 name = "sense-voice"
 version = "0.1.0"
-description = "Local SenseVoice deployment with SenseVoice.cpp and official FunASR backends"
+description = "SenseVoice voice understanding: FunASR official backend (main); Mac cpp on mac branch"
 channels = ["conda-forge"]
 platforms = ["osx-arm64", "linux-64"]
 
@@ -14,7 +14,7 @@ huggingface_hub = ">=0.20"
 ffmpeg = "*"
 
 [tasks]
-build = { cmd = "bash scripts/build.sh", description = "Build SenseVoice.cpp with platform GPU acceleration" }
+build = { cmd = "bash scripts/build.sh", description = "Build optional reference/SenseVoice.cpp (see docs/REFERENCE.md)" }
 download-model = { cmd = "python scripts/download_model.py", description = "Download GGUF model and sample audio" }
 test = { cmd = "python scripts/test_transcribe.py", description = "Run sample transcription" }
 test-srt = { cmd = "python scripts/test_srt_smoke.py", description = "Smoke tests for SRT split and timestamps (no GPU)" }

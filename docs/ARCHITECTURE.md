@@ -39,7 +39,8 @@
 | `scripts/sv.py` | CLI：单文件 ASR → text/json |
 | `scripts/extract_audio.py` | 抽 16k mono |
 | `scripts/benchmark_voice_llm.py` 中 `run_asr`, `ollama_*`, `chunk_text` | LLM 与 ASR 胶水（**待抽到 `llm.py`**） |
-| `SenseVoice.cpp/`, `models/`, `pixi.toml` | 推理后端与构建 |
+| `models/`, `pixi.toml` | 模型与运行环境 |
+| `reference/SenseVoice.cpp` | 可选 C++ 后端（**`mac` 分支 vendor 在根 `SenseVoice.cpp/`**） |
 
 ### 2. Subtitle — 字幕 / 翻译
 

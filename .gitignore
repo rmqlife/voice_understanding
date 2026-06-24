@@ -14,3 +14,5 @@ test_voice_clips/*
 fbank_lfr_cmvn_feature.json
 reference/
 mag/
+# Legacy vendored path (only on mac branch); ignore if present after checkout
+SenseVoice.cpp/

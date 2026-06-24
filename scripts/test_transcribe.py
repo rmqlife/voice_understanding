@@ -17,7 +17,7 @@ def main() -> None:
         print("Sample audio missing. Run: pixi run download-model")
         sys.exit(1)
 
-    sv = SenseVoice(use_gpu=True)
+    sv = SenseVoice(backend="official", device="cpu", use_gpu=False)
     result = sv.transcribe(SAMPLE, raw=True)
     print("Raw output:")
     print(result.raw)

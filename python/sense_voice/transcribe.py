@@ -14,7 +14,8 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_BIN = ROOT / "SenseVoice.cpp" / "build" / "bin" / "sense-voice-main"
+DEFAULT_CPP_ROOT = ROOT / "reference" / "SenseVoice.cpp"
+DEFAULT_BIN = DEFAULT_CPP_ROOT / "build" / "bin" / "sense-voice-main"
 DEFAULT_MODEL = ROOT / "models" / "sense-voice-small-fp16.gguf"
 DEFAULT_OFFICIAL_MODEL = "iic/SenseVoiceSmall"
 DEFAULT_MERGE_LENGTH_S = 6
@@ -433,8 +434,8 @@ class SenseVoice:
     """Local SenseVoice speech recognition.
 
     Backends:
-    - cpp: SenseVoice.cpp GGUF binary, useful for macOS/Metal.
-    - official: FunASR AutoModel, useful for CUDA GPU environments.
+    - official: FunASR AutoModel (default on main; CUDA GPU on mag).
+    - cpp: SenseVoice.cpp GGUF binary (mac branch vendors source; optional reference clone).
     """
 
     def __init__(
@@ -452,7 +453,7 @@ class SenseVoice:
         merge_length_s: float = DEFAULT_MERGE_LENGTH_S,
         max_single_segment_ms: int = DEFAULT_MAX_SINGLE_SEGMENT_MS,
     ) -> None:
-        self.backend = (backend or os.environ.get("SENSE_VOICE_BACKEND", "cpp")).lower()
+        self.backend = (backend or os.environ.get("SENSE_VOICE_BACKEND", "official")).lower()
         if self.backend in {"cxx", "sensevoice.cpp", "sense-voice.cpp"}:
             self.backend = "cpp"
         if self.backend in {"funasr", "python"}:
@@ -484,7 +485,9 @@ class SenseVoice:
         if not self.bin_path.is_file():
             raise FileNotFoundError(
                 f"sense-voice-main not found at {self.bin_path}. "
-                "Run: pixi run build"
+                "On main, use --backend official, or checkout the mac branch. "
+                "Optional: git clone https://github.com/lovemefan/SenseVoice.cpp "
+                f"reference/SenseVoice.cpp && pixi run build"
             )
         model_path = Path(self.model_path)
         if not model_path.is_file():

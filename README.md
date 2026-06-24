@@ -1,11 +1,17 @@
 # SenseVoice 本地语音理解
 
-本仓库支持两套 ASR 后端：
+**分支说明**
 
-- `official`: 官方 SenseVoice/FunASR Python 包，适合 Linux + NVIDIA GPU。
-- `cpp`: SenseVoice.cpp GGUF 命令行，适合 macOS Apple Silicon + Metal，也可在 Linux 编译 CUDA/CPU。
+| 分支 | ASR 后端 | 说明 |
+|------|----------|------|
+| **`main`** | `official`（FunASR / CUDA） | mag GPU 测试、字幕/转写主线；**不含** SenseVoice.cpp |
+| **`mac`** | `cpp`（SenseVoice.cpp + Metal） | Mac 本地开发；仓库内 vendor `SenseVoice.cpp/` |
 
-## Linux GPU 官方包
+Mac 上请 `git checkout mac`，详见 [`docs/MAC.md`](docs/MAC.md)（仅 mac 分支）。
+
+本 README 以下以 **`main` / `official`** 为准。
+
+## Linux GPU 官方包（main）
 
 ```bash
 pixi install
@@ -24,17 +30,17 @@ SENSE_VOICE_BACKEND=official SENSE_VOICE_DEVICE=cuda:0 pixi run sv your-audio.wa
 pixi run sv your-audio.wav --backend official --device cuda:0 --model iic/SenseVoiceSmall
 ```
 
-## macOS SenseVoice.cpp
+## macOS / SenseVoice.cpp
+
+请使用 **`mac` 分支**（含 `SenseVoice.cpp/`）：
 
 ```bash
-pixi install
-pixi run build
-pixi run download-model
-
+git checkout mac
+pixi run build && pixi run download-model
 pixi run sv models/asr_example_zh.wav --backend cpp
 ```
 
-`scripts/build.sh` 会在 macOS 使用 `GGML_METAL=ON`，在 Linux NVIDIA 环境使用 `GGML_CUDA=ON`，否则构建 CPU 版本。
+详见 mac 分支 [`docs/MAC.md`](docs/MAC.md)。
 
 ## 本地 LLM Benchmark
 
@@ -69,14 +75,7 @@ pixi run benchmark -- \
   --language zh
 ```
 
-使用 macOS C++ 后端：
-
-```bash
-pixi run benchmark -- \
-  --asr-backend cpp \
-  --model qwen3.5:latest \
-  --language zh
-```
+使用 mac 分支 C++ 后端见 mac 分支 [`docs/MAC.md`](docs/MAC.md)。
 
 报告输出到 `reports/voice_llm_benchmark.md`。
 
@@ -117,16 +116,16 @@ from sense_voice import SenseVoice
 
 sv = SenseVoice(backend="official", device="cuda:0", language="zh")
 print(sv.transcribe("test_voice_clips/sunflower.mp3"))
-
-sv_cpp = SenseVoice(backend="cpp", use_gpu=True)
-print(sv_cpp.transcribe("models/asr_example_zh.wav"))
 ```
+
+Mac C++ 示例见 `mac` 分支 [`docs/MAC.md`](docs/MAC.md)。
 
 ## 环境变量
 
 | 变量 | 说明 |
 |------|------|
-| `SENSE_VOICE_BACKEND` | `cpp` 或 `official`，默认 `cpp` |
+| `SENSE_VOICE_BACKEND` | `official`（main 默认）或 `cpp`（mac 分支） |
 | `SENSE_VOICE_DEVICE` | 官方后端设备，例如 `cuda:0` 或 `cpu` |
 | `SENSE_VOICE_MODEL` | 官方模型名或 C++ GGUF 模型路径 |
-| `SENSE_VOICE_BIN` | C++ 可执行文件路径，默认 `SenseVoice.cpp/build/bin/sense-voice-main` |
+| `SENSE_VOICE_BIN` | C++ 可执行文件路径（仅 `cpp` 后端） |
+| `SENSE_VOICE_CPP_ROOT` | C++ 源码目录（可选 clone 到 `reference/SenseVoice.cpp`） |

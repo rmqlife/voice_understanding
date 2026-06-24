@@ -6,8 +6,10 @@
 
 | 环境 | 主机 | 用途 |
 |------|------|------|
-| 本地开发 | Mac (`sense-voice/`) | 写代码、改 `docs/TODO-*.md`、看回传的 SRT/报告 |
+| 本地开发 | Mac (`sense-voice/`) | 写代码；**ASR 用 `mac` 分支 cpp 或 mag 上测 official** |
 | GPU 测试 | `rmqlife-mag` | 官方 SenseVoice ASR（`cuda:0`）、Ollama（`nsfw-local:27b`）、长音频样例 |
+
+**分支**：`main` = FunASR official（mag）；`mac` = SenseVoice.cpp + Metal，见 [`docs/MAC.md`](docs/MAC.md)。
 
 mag 上的仓库路径：
 
@@ -66,10 +68,11 @@ mag 曾出现过仅存在于机器上的文件（如 `mag/vr_audio_sync/`、`scr
 
 `.gitignore` 已包含：
 
-- `reference/` — 外部参考仓库（如 KrillinAI），本地 clone 查阅，不提交。
+- `reference/` — 外部参考（KrillinAI、可选 SenseVoice.cpp clone），见 [`docs/REFERENCE.md`](docs/REFERENCE.md)
+- `SenseVoice.cpp/` — **仅 `mac` 分支** vendor；`main` 已删除
 - `mag/` — mag 机器上的同步缓存、大音频等。
 - `test_voice_clips/*` — 长 VR 测试音频（仓库内只保留 `sunflower.mp3` 作小样）。
-- `models/`、`SenseVoice.cpp/build/`、`.pixi/` 等构建与模型产物。
+- `models/`、`reference/SenseVoice.cpp/build/`、`.pixi/` 等构建与模型产物。
 
 大音频、benchmark 结果如需共享：**放 mag 或 reports 回传**，不要直接 commit 进仓库（除非用户明确要求归档某次报告）。
 

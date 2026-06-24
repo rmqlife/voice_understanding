@@ -24,7 +24,7 @@ ASR、音频预处理、LLM 调用——**字幕线与转写线共用**。功能
 
 - [ ] 长音频分块 ASR + 拼接（`get_silence_split_points` 接入 `transcribe`）
 - [ ] `sv.py` 支持批量目录、进度日志
-- [ ] 文档化 backend 选择：`cpp` vs `official`，设备参数
+- [ ] 文档化 backend：`official`（main/mag）vs `cpp`（`mac` 分支），见 [`REFERENCE.md`](REFERENCE.md)
 
 ## P2 — 模型与部署
 
