@@ -167,12 +167,135 @@ def _words_from_timestamp(text: str, timestamp: Any) -> list[dict[str, Any]]:
     return words
 
 
+def _build_char_timings(words: list[Any], timestamp: list[Any]) -> list[dict[str, Any]]:
+    timings: list[dict[str, Any]] = []
+    for index, char in enumerate(words):
+        if index >= len(timestamp):
+            break
+        item = timestamp[index]
+        if not isinstance(item, (list, tuple)) or len(item) < 2:
+            continue
+        start = _ms_to_seconds(item[0])
+        end = _ms_to_seconds(item[1])
+        if start is None or end is None:
+            continue
+        timings.append(
+            {
+                "text": str(char),
+                "start": start,
+                "end": end,
+            }
+        )
+    return timings
+
+
+def _normalize_chars(text: str) -> str:
+    return re.sub(r"\s+", "", strip_tags(text))
+
+
+def _find_char_span(haystack: str, needle: str, start: int) -> tuple[int, int] | None:
+    if not needle:
+        return None
+    index = haystack.find(needle, start)
+    if index < 0:
+        return None
+    return index, index + len(needle)
+
+
+def _segments_from_char_timings(text: str, char_timings: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    if not char_timings:
+        return []
+
+    char_stream = "".join(item["text"] for item in char_timings)
+    segments: list[dict[str, Any]] = []
+    cursor = 0
+
+    for match in TAG_GROUP_PATTERN.finditer(text):
+        tags = re.findall(r"<\|([^|]+)\|>", match.group(1))
+        segment_text = match.group(2).strip()
+        if not segment_text:
+            continue
+        lang = next((tag for tag in tags if tag in LANG_TAGS), None)
+        speech_type = next((tag for tag in tags if tag in SPEECH_TAGS), None)
+        itn = next((tag for tag in tags if tag in ITN_TAGS), None)
+        emotions = [
+            tag
+            for tag in tags
+            if tag not in LANG_TAGS and tag not in SPEECH_TAGS and tag not in ITN_TAGS
+        ]
+        normalized = _normalize_chars(segment_text)
+        if not normalized:
+            continue
+        span = _find_char_span(char_stream, normalized, cursor)
+        if span is None:
+            span = _find_char_span(char_stream, normalized, 0)
+        if span is None:
+            segments.append(
+                {
+                    "start": None,
+                    "end": None,
+                    "lang": lang,
+                    "type": speech_type,
+                    "itn": itn,
+                    "emotion": ",".join(emotions) if emotions else None,
+                    "text": strip_tags(segment_text),
+                    "timing_confidence": "low",
+                }
+            )
+            continue
+
+        begin, end = span
+        segments.append(
+            {
+                "start": char_timings[begin]["start"],
+                "end": char_timings[end - 1]["end"],
+                "lang": lang,
+                "type": speech_type,
+                "itn": itn,
+                "emotion": ",".join(emotions) if emotions else None,
+                "text": strip_tags(segment_text),
+                "timing_confidence": "high",
+            }
+        )
+        cursor = end
+
+    if segments:
+        return segments
+
+    normalized = _normalize_chars(text)
+    if normalized:
+        span = _find_char_span(char_stream, normalized, 0)
+        if span:
+            begin, end = span
+            return [
+                {
+                    "start": char_timings[begin]["start"],
+                    "end": char_timings[end - 1]["end"],
+                    "lang": None,
+                    "type": None,
+                    "itn": None,
+                    "emotion": None,
+                    "text": strip_tags(text),
+                    "timing_confidence": "high",
+                }
+            ]
+    return []
+
+
 def extract_official_segments(result: list[Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]], str]:
     """Parse FunASR SenseVoice output into timed segments and optional word spans."""
     if not result:
         return [], [], "none"
 
     item = result[0] if isinstance(result[0], dict) else {}
+    words = item.get("words")
+    timestamp = item.get("timestamp")
+    if isinstance(words, list) and isinstance(timestamp, list) and words and timestamp:
+        char_timings = _build_char_timings(words, timestamp)
+        segments = _segments_from_char_timings(str(item.get("text", "")), char_timings)
+        if segments:
+            return segments, char_timings, "char_timestamp"
+
     sentence_info = item.get("sentence_info")
     if isinstance(sentence_info, list) and sentence_info:
         segments: list[dict[str, Any]] = []
