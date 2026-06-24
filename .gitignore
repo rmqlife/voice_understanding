@@ -12,3 +12,5 @@ test_voice_clips/*
 *.wav
 *.aac
 fbank_lfr_cmvn_feature.json
+reference/
+mag/

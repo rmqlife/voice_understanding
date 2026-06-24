@@ -76,6 +76,18 @@ def run_asr(
     )
 
 
+def stop_ollama_models(models: list[str]) -> None:
+    for model in sorted({m for m in models if m}):
+        subprocess.run(
+            ["ollama", "stop", model],
+            text=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+            timeout=30,
+        )
+
+
 def ollama_generate(model: str, prompt: str) -> tuple[str, float]:
     payload = json.dumps(
         {
@@ -106,17 +118,18 @@ def polish_prompt(text: str, profile: str) -> str:
 要求：
 - 保留时间线结构，不要把内容改写成无时间戳的散文。
 - 只整理可从音频文本判断的信息，不要补写画面、人物关系或事实。
-- 保留关键台词、语气、情绪标签和明显音效；删除重复口癖、卡顿和无意义识别噪声。
+- 删除重复口癖、卡顿和无意义识别噪声。
 - 输出主体必须是中文；如果原文是日文、英文或其他语言，请翻译成自然中文。
 - 每个输入时间线条目都必须在输出中有对应条目；不能省略末尾片段。
-- 如果识别结果是呻吟、笑声、喘息、背景音乐或不可辨语音，用中性标签描述，例如“[喘息]”“[笑声]”“[背景音乐]”“[不可辨语音]”。
+- 不要合并、拆分或重排时间线条目；输出条目数要尽量与输入一致，便于生成 SRT。
+- 如果识别结果是呻吟、笑声、喘息、背景音乐或不可辨语音，把描述写进 text，例如“[喘息]”“[笑声]”“[背景音乐]”“[不可辨语音]”。
 - 不要做道德评价，不要扩写情色描写。
 - 输出 Markdown，包含：
   1. `## Timeline`
-  2. 时间线条目，格式为 `- [开始-结束] tags: ... | text: ...`
+  2. 时间线条目，格式必须为 `- [开始-结束] 中文字幕文本`（不要输出 lang/emotion/type 等 tags）
   3. `## Notes`，只列出 ASR 不确定点和明显噪声。
 
-ASR 时间线：
+ASR 时间线（每行格式为 `[开始-结束] 原文`）：
 {text}
 """
 
@@ -181,14 +194,27 @@ Text:
 """
 
 
-def assess_prompt(raw: str, polished: str, english: str, profile: str) -> str:
-    work_type = "VR/成人视频时间线整理" if profile == "vr" else "ASR 转写 -> 中文润色 -> 英文翻译"
+def assess_prompt(
+    raw: str,
+    polished: str,
+    english: str,
+    profile: str,
+    *,
+    include_english: bool,
+) -> str:
+    if profile == "vr":
+        work_type = "VR/成人视频时间线整理"
+    elif include_english:
+        work_type = "ASR 转写 -> 中文润色 -> 英文翻译"
+    else:
+        work_type = "ASR 转写 -> 中文润色"
+    english_section = f"\n英文翻译：\n{english}\n" if include_english else ""
+    english_score = "\n2. 英文翻译质量评分：1-5" if include_english else ""
     return f"""/no_think
 请评估下面一次“{work_type}”的本地处理结果。
 
 请输出：
-1. 中文润色质量评分：1-5
-2. 英文翻译质量评分：1-5
+1. 中文润色质量评分：1-5{english_score}
 3. 主要问题
 4. 是否适合直接用于工作记录
 
@@ -197,10 +223,7 @@ ASR 原文：
 
 中文润色：
 {polished}
-
-英文翻译：
-{english}
-"""
+{english_section}"""
 
 
 def seconds_label(seconds: float | None) -> str:
@@ -320,6 +343,34 @@ def format_timeline(segments: list[dict[str, object]]) -> str:
     return "\n".join(lines)
 
 
+def format_timeline_compact(segments: list[dict[str, object]]) -> str:
+    """Timestamp + text only; leaner LLM input and SRT-friendly."""
+    lines: list[str] = []
+    for segment in segments:
+        start = seconds_label(segment.get("start"))
+        end = seconds_label(segment.get("end"))
+        lines.append(f"[{start}-{end}] {segment['text']}")
+    return "\n".join(lines)
+
+
+def resolve_llm_timeline_mode(profile: str, llm_timeline: str | None) -> str:
+    if llm_timeline:
+        return llm_timeline
+    return "compact" if profile == "vr" else "full"
+
+
+def build_llm_input(
+    segments: list[dict[str, object]],
+    timeline: str,
+    *,
+    llm_timeline: str,
+    drop_language_artifacts: bool,
+) -> str:
+    if llm_timeline == "compact":
+        return format_timeline_compact(segments)
+    return normalize_asr_text(timeline, drop_language_artifacts=drop_language_artifacts)
+
+
 def max_timestamp_seconds(text: str) -> float | None:
     matches = re.findall(r"\[(?:\d+(?:\.\d+)?)-(\d+(?:\.\d+)?)\]", text)
     if not matches:
@@ -379,6 +430,70 @@ def normalize_asr_text(text: str, *, drop_language_artifacts: bool = True) -> st
 
 def md_code(text: str) -> str:
     return "```text\n" + text.strip() + "\n```"
+
+
+SRT_LINE_PATTERN = re.compile(
+    r"^\s*(?:[-*]\s*)?\[(?P<start>[^\]-]+)-(?P<end>[^\]]+)\]\s*(?P<text>.+?)\s*$"
+)
+
+
+def parse_time_label(label: str) -> float | None:
+    label = label.strip().replace(",", ".")
+    if not label or "?" in label:
+        return None
+    parts = label.split(":")
+    try:
+        if len(parts) == 1:
+            return float(parts[0])
+        if len(parts) == 2:
+            minutes, seconds = parts
+            return int(minutes) * 60 + float(seconds)
+        if len(parts) == 3:
+            hours, minutes, seconds = parts
+            return int(hours) * 3600 + int(minutes) * 60 + float(seconds)
+    except ValueError:
+        return None
+    return None
+
+
+def srt_timestamp(seconds: float) -> str:
+    millis = int(round(max(0.0, seconds) * 1000))
+    hours, remainder = divmod(millis, 3_600_000)
+    minutes, remainder = divmod(remainder, 60_000)
+    secs, millis = divmod(remainder, 1000)
+    return f"{hours:02d}:{minutes:02d}:{secs:02d},{millis:03d}"
+
+
+def parse_srt_entries(polished: str) -> list[tuple[float, float, str]]:
+    entries: list[tuple[float, float, str]] = []
+    for line in polished.splitlines():
+        match = SRT_LINE_PATTERN.match(line)
+        if not match:
+            continue
+        start = parse_time_label(match.group("start"))
+        end = parse_time_label(match.group("end"))
+        text = match.group("text").strip()
+        text = re.sub(r"^tags:\s*.*?\|\s*text:\s*", "", text).strip()
+        if start is None or end is None or end <= start or not text:
+            continue
+        entries.append((start, end, text))
+    return entries
+
+
+def write_srt(path: Path, entries: list[tuple[float, float, str]]) -> None:
+    blocks: list[str] = []
+    for idx, (start, end, text) in enumerate(entries, start=1):
+        blocks.append(
+            "\n".join(
+                [
+                    str(idx),
+                    f"{srt_timestamp(start)} --> {srt_timestamp(end)}",
+                    text,
+                ]
+            )
+        )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n\n".join(blocks) + ("\n" if blocks else ""), encoding="utf-8")
 
 
 def chunk_text(text: str, max_chars: int) -> list[str]:
@@ -456,10 +571,33 @@ def main() -> None:
         help="ASR model path/name override",
     )
     parser.add_argument("--chunk-chars", type=int, default=900, help="Max transcript chars per LLM call")
+    parser.add_argument(
+        "--skip-translate",
+        action="store_true",
+        help="Skip English translation (VR ja->zh polish only)",
+    )
+    parser.add_argument(
+        "--skip-assess",
+        action="store_true",
+        help="Skip model self-assessment",
+    )
+    parser.add_argument(
+        "--llm-timeline",
+        choices=["full", "compact"],
+        default=None,
+        help="Timeline format sent to polish LLM; default compact for vr profile",
+    )
+    parser.add_argument(
+        "--srt-dir",
+        type=Path,
+        default=None,
+        help="Optional directory for Chinese SRT files generated from polished timelines",
+    )
     args = parser.parse_args()
     polish_model = args.polish_model or args.model
     translate_model = args.translate_model or args.model
     assess_model = args.assess_model or args.model
+    llm_timeline_mode = resolve_llm_timeline_mode(args.profile, args.llm_timeline)
 
     audio_files = sorted(
         p for p in args.clips.iterdir() if p.suffix.lower() in {".mp3", ".aac", ".wav", ".m4a", ".flac"}
@@ -474,6 +612,7 @@ def main() -> None:
 
     for audio in audio_files:
         print(f"Processing {audio.name}", flush=True)
+        stop_ollama_models([polish_model, translate_model, assess_model])
         asr_text, raw, result_audio_seconds, asr_seconds, stderr = run_asr(
             audio,
             args.language,
@@ -488,27 +627,50 @@ def main() -> None:
         )
         segments = parse_asr_segments(raw, asr_text, audio_seconds)
         timeline = format_timeline(segments)
-        transcript = normalize_asr_text(
+        llm_input = build_llm_input(
+            segments,
             timeline,
+            llm_timeline=llm_timeline_mode,
             drop_language_artifacts=args.profile == "finance",
         )
-        chunks = chunk_text(transcript, args.chunk_chars)
+        chunks = chunk_text(llm_input, args.chunk_chars)
 
         polished, polish_seconds = generate_by_chunk(
             polish_model,
             chunks,
             lambda chunk: polish_prompt(chunk, args.profile),
         )
-        polished_chunks = chunk_text(polished, args.chunk_chars)
-        english, translate_seconds = generate_by_chunk(
-            translate_model,
-            polished_chunks,
-            translate_prompt,
-        )
-        assessment, assess_seconds = ollama_generate(
-            assess_model,
-            assess_prompt(transcript, polished, english, args.profile),
-        )
+        srt_path = None
+        srt_entries = 0
+        if args.srt_dir:
+            srt_path = args.srt_dir / audio.with_suffix(".srt").name
+            entries = parse_srt_entries(polished)
+            write_srt(srt_path, entries)
+            srt_entries = len(entries)
+        if args.skip_translate:
+            english = ""
+            translate_seconds = 0.0
+        else:
+            polished_chunks = chunk_text(polished, args.chunk_chars)
+            english, translate_seconds = generate_by_chunk(
+                translate_model,
+                polished_chunks,
+                translate_prompt,
+            )
+        if args.skip_assess:
+            assessment = ""
+            assess_seconds = 0.0
+        else:
+            assessment, assess_seconds = ollama_generate(
+                assess_model,
+                assess_prompt(
+                    llm_input,
+                    polished,
+                    english,
+                    args.profile,
+                    include_english=not args.skip_translate,
+                ),
+            )
 
         rows.append(
             {
@@ -517,17 +679,21 @@ def main() -> None:
                 "audio_seconds": audio_seconds,
                 "asr_seconds": asr_seconds,
                 "asr_rtf": asr_seconds / audio_seconds if audio_seconds else None,
-                "raw_chars": len(transcript),
+                "raw_chars": len(llm_input),
+                "timeline_chars": len(timeline),
                 "segments": len(segments),
                 "chunks": len(chunks),
                 "polished_chars": len(polished),
+                "srt_path": srt_path,
+                "srt_entries": srt_entries,
                 "english_chars": len(english),
                 "polish_seconds": polish_seconds,
                 "translate_seconds": translate_seconds,
                 "assess_seconds": assess_seconds,
                 "stderr": stderr,
                 "raw": raw,
-                "transcript": transcript,
+                "timeline": timeline,
+                "llm_input": llm_input,
                 "polished": polished,
                 "english": english,
                 "assessment": assessment,
@@ -550,9 +716,18 @@ def main() -> None:
         lines.append(f"- ASR model: `{args.asr_model}`")
     lines.append(f"- ASR language: `{args.language}`")
     lines.append(f"- Prompt profile: `{args.profile}`")
+    lines.append(f"- LLM timeline format: `{llm_timeline_mode}`")
+    if args.srt_dir:
+        lines.append(f"- Chinese SRT output: `{args.srt_dir}`")
     lines.append(f"- Polish LLM: `{polish_model}` via Ollama local API")
-    lines.append(f"- Translate LLM: `{translate_model}` via Ollama local API")
-    lines.append(f"- Assess LLM: `{assess_model}` via Ollama local API")
+    if args.skip_translate:
+        lines.append("- English translation: skipped")
+    else:
+        lines.append(f"- Translate LLM: `{translate_model}` via Ollama local API")
+    if args.skip_assess:
+        lines.append("- Self-assessment: skipped")
+    else:
+        lines.append(f"- Assess LLM: `{assess_model}` via Ollama local API")
     lines.append(f"- LLM chunk size: {args.chunk_chars} chars")
     if args.clips:
         lines.append(f"- Source directory: `{args.clips}`")
@@ -565,15 +740,23 @@ def main() -> None:
     lines.append(f"- Approx. audio duration: {total_audio:.1f}s")
     lines.append(f"- Total ASR wall time: {total_asr:.2f}s")
     lines.append(f"- Total polish wall time: {total_polish:.2f}s")
-    lines.append(f"- Total English translation wall time: {total_translate:.2f}s")
+    if not args.skip_translate:
+        lines.append(f"- Total English translation wall time: {total_translate:.2f}s")
     lines.append("")
     lines.append("## Benchmark Table")
     lines.append("")
-    lines.append("| File | Size MB | Audio s | ASR s | ASR RTF | Segments | Raw chars | Chunks | Polish s | Translate s |")
-    lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
+    if llm_timeline_mode == "compact":
+        lines.append("| File | Size MB | Audio s | ASR s | ASR RTF | Segments | LLM chars | Timeline chars | Chunks | Polish s" + ("" if args.skip_translate else " | Translate s") + " |")
+        lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:" + ("" if args.skip_translate else ":---") + "|")
+    elif args.skip_translate:
+        lines.append("| File | Size MB | Audio s | ASR s | ASR RTF | Segments | LLM chars | Chunks | Polish s |")
+        lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|")
+    else:
+        lines.append("| File | Size MB | Audio s | ASR s | ASR RTF | Segments | LLM chars | Chunks | Polish s | Translate s |")
+        lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
     for r in rows:
-        lines.append(
-            "| {file} | {size_mb:.2f} | {audio_seconds:.1f} | {asr_seconds:.2f} | {asr_rtf:.3f} | {segments} | {raw_chars} | {chunks} | {polish_seconds:.2f} | {translate_seconds:.2f} |".format(
+        if llm_timeline_mode == "compact":
+            row = "| {file} | {size_mb:.2f} | {audio_seconds:.1f} | {asr_seconds:.2f} | {asr_rtf:.3f} | {segments} | {raw_chars} | {timeline_chars} | {chunks} | {polish_seconds:.2f}".format(
                 file=str(r["file"]).replace("|", "\\|"),
                 size_mb=float(r["size_mb"]),
                 audio_seconds=float(r["audio_seconds"] or 0),
@@ -581,16 +764,52 @@ def main() -> None:
                 asr_rtf=float(r["asr_rtf"] or 0),
                 segments=int(r["segments"]),
                 raw_chars=int(r["raw_chars"]),
+                timeline_chars=int(r["timeline_chars"]),
                 chunks=int(r["chunks"]),
                 polish_seconds=float(r["polish_seconds"]),
-                translate_seconds=float(r["translate_seconds"]),
             )
-        )
+            if not args.skip_translate:
+                row += " | {translate_seconds:.2f}".format(translate_seconds=float(r["translate_seconds"]))
+            lines.append(row + " |")
+        elif args.skip_translate:
+            lines.append(
+                "| {file} | {size_mb:.2f} | {audio_seconds:.1f} | {asr_seconds:.2f} | {asr_rtf:.3f} | {segments} | {raw_chars} | {chunks} | {polish_seconds:.2f} |".format(
+                    file=str(r["file"]).replace("|", "\\|"),
+                    size_mb=float(r["size_mb"]),
+                    audio_seconds=float(r["audio_seconds"] or 0),
+                    asr_seconds=float(r["asr_seconds"]),
+                    asr_rtf=float(r["asr_rtf"] or 0),
+                    segments=int(r["segments"]),
+                    raw_chars=int(r["raw_chars"]),
+                    chunks=int(r["chunks"]),
+                    polish_seconds=float(r["polish_seconds"]),
+                )
+            )
+        else:
+            lines.append(
+                "| {file} | {size_mb:.2f} | {audio_seconds:.1f} | {asr_seconds:.2f} | {asr_rtf:.3f} | {segments} | {raw_chars} | {chunks} | {polish_seconds:.2f} | {translate_seconds:.2f} |".format(
+                    file=str(r["file"]).replace("|", "\\|"),
+                    size_mb=float(r["size_mb"]),
+                    audio_seconds=float(r["audio_seconds"] or 0),
+                    asr_seconds=float(r["asr_seconds"]),
+                    asr_rtf=float(r["asr_rtf"] or 0),
+                    segments=int(r["segments"]),
+                    raw_chars=int(r["raw_chars"]),
+                    chunks=int(r["chunks"]),
+                    polish_seconds=float(r["polish_seconds"]),
+                    translate_seconds=float(r["translate_seconds"]),
+                )
+            )
     lines.append("")
     lines.append("## Findings")
     lines.append("")
     lines.append(f"- `{args.asr_backend}` ASR completed for all selected clips.")
-    lines.append(f"- `{polish_model}` handled transcript cleanup; `{translate_model}` handled English translation; `{assess_model}` handled self-assessment.")
+    if args.skip_translate:
+        lines.append(f"- `{polish_model}` handled ja->zh transcript cleanup only.")
+    else:
+        lines.append(f"- `{polish_model}` handled transcript cleanup; `{translate_model}` handled English translation.")
+    if not args.skip_assess:
+        lines.append(f"- `{assess_model}` handled self-assessment.")
     lines.append("- The LLM input is now a structured timeline with coarse or exact segment times plus SenseVoice tags where available.")
     lines.append("- Best current direction: keep ASR language pinned when known, process long recordings in chunks, and keep domain-specific prompt profiles separate.")
     lines.append("")
@@ -604,8 +823,14 @@ def main() -> None:
         lines.append(f"- Approx. audio duration: {float(r['audio_seconds'] or 0):.1f}s")
         lines.append(f"- ASR wall time: {float(r['asr_seconds']):.2f}s")
         lines.append(f"- Structured ASR segments: {int(r['segments'])}")
+        lines.append(f"- LLM input chars: {int(r['raw_chars'])}")
+        if r["srt_path"]:
+            lines.append(f"- Chinese SRT: `{r['srt_path']}` ({int(r['srt_entries'])} entries)")
+        if llm_timeline_mode == "compact":
+            lines.append(f"- Full timeline chars: {int(r['timeline_chars'])}")
         lines.append(f"- Polish wall time: {float(r['polish_seconds']):.2f}s")
-        lines.append(f"- Translation wall time: {float(r['translate_seconds']):.2f}s")
+        if not args.skip_translate:
+            lines.append(f"- Translation wall time: {float(r['translate_seconds']):.2f}s")
         if r["stderr"]:
             warning_lines = [line for line in str(r["stderr"]).splitlines() if "Input buffer exhausted" in line or "Invalid data" in line]
             if warning_lines:
@@ -615,17 +840,24 @@ def main() -> None:
         lines.append("")
         lines.append(md_code(str(r["polished"])))
         lines.append("")
-        lines.append("### English Translation")
-        lines.append("")
-        lines.append(md_code(str(r["english"])))
-        lines.append("")
-        lines.append("### Model Self-Assessment")
-        lines.append("")
-        lines.append(md_code(str(r["assessment"])))
-        lines.append("")
+        if not args.skip_translate:
+            lines.append("### English Translation")
+            lines.append("")
+            lines.append(md_code(str(r["english"])))
+            lines.append("")
+        if not args.skip_assess:
+            lines.append("### Model Self-Assessment")
+            lines.append("")
+            lines.append(md_code(str(r["assessment"])))
+            lines.append("")
+        if llm_timeline_mode == "compact":
+            lines.append("### LLM Input Timeline")
+            lines.append("")
+            lines.append(md_code(str(r["llm_input"])))
+            lines.append("")
         lines.append("### Structured ASR Timeline")
         lines.append("")
-        lines.append(md_code(str(r["transcript"])))
+        lines.append(md_code(str(r["timeline"])))
         lines.append("")
         lines.append("### Raw ASR Payload")
         lines.append("")
