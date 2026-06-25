@@ -12,9 +12,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "python"))
-sys.path.insert(0, str(ROOT / "scripts"))
 
-import benchmark_voice_llm as bvl  # noqa: E402
+from sense_voice.asr_cli import run_asr  # noqa: E402
 from sense_voice.audio import ffprobe_duration, max_timestamp_seconds  # noqa: E402
 from sense_voice.diarize import diarize  # noqa: E402
 from sense_voice.llm import (  # noqa: E402
@@ -66,7 +65,6 @@ def process_clip(
     asr_device: str | None,
     asr_model: str | None,
     diarize_method: str,
-    pyannote_exclusive: bool,
     polish_model: str | None,
     polish_profile: str,
     chunk_chars: int,
@@ -81,11 +79,10 @@ def process_clip(
         audio,
         method=diarize_method,  # type: ignore[arg-type]
         device=asr_device or "cuda:0",
-        pyannote_exclusive=pyannote_exclusive,
     )
     turns = merge_adjacent_turns(turns, same_speaker=True)
 
-    asr_text, raw, result_audio_seconds, asr_seconds, stderr, asr_payload = bvl.run_asr(
+    asr_text, raw, result_audio_seconds, asr_seconds, stderr, asr_payload = run_asr(
         audio,
         language,
         backend=asr_backend,
@@ -218,9 +215,9 @@ def main() -> None:
     parser.add_argument("--asr-model", default=None)
     parser.add_argument(
         "--diarize-method",
-        choices=["auto", "funasr", "pyannote", "ffmpeg-alternate", "vad"],
+        choices=["auto", "funasr", "ffmpeg-alternate"],
         default="funasr",
-        help="funasr/pyannote/ffmpeg-alternate; vad is deprecated alias",
+        help="funasr is the main path; ffmpeg-alternate is a debug baseline only",
     )
     parser.add_argument("--polish-model", default="nsfw-local:27b")
     parser.add_argument(
@@ -236,14 +233,9 @@ def main() -> None:
     )
     parser.add_argument("--name-speakers-model", default=None)
     parser.add_argument(
-        "--pyannote-exclusive",
-        action="store_true",
-        help="Use pyannote exclusive_speaker_diarization (no overlapping turns)",
-    )
-    parser.add_argument(
         "--output-suffix",
         default="",
-        help="Append to output md/json stem to avoid overwriting (e.g. _pyannote_exclusive)",
+        help="Append to output md/json stem to avoid overwriting (e.g. _funasr_p1)",
     )
     parser.add_argument("--chunk-chars", type=int, default=6000)
     parser.add_argument("--skip-polish", action="store_true")
@@ -270,7 +262,6 @@ def main() -> None:
                 asr_device=args.asr_device,
                 asr_model=args.asr_model,
                 diarize_method=args.diarize_method,
-                pyannote_exclusive=args.pyannote_exclusive,
                 polish_model=None if args.skip_polish else args.polish_model,
                 polish_profile=args.polish_profile,
                 chunk_chars=args.chunk_chars,

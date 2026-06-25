@@ -5,7 +5,8 @@ from pathlib import Path
 
 from huggingface_hub import hf_hub_download
 
-ROOT = Path(__file__).resolve().parents[1]
+# Archived mac/cpp helper: repo root is two levels up from archive/mac/.
+ROOT = Path(__file__).resolve().parents[2]
 MODELS_DIR = ROOT / "models"
 REPO_ID = "lovemefan/sense-voice-gguf"
 

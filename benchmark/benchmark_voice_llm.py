@@ -2,16 +2,15 @@
 from __future__ import annotations
 
 import argparse
-import json
-import subprocess
 import sys
-import time
 from datetime import datetime
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+BENCH_DIR = Path(__file__).resolve().parent
+ROOT = BENCH_DIR.parent
 sys.path.insert(0, str(ROOT / "python"))
 
+from sense_voice.asr_cli import run_asr  # noqa: E402
 from sense_voice.audio import ffprobe_duration, max_timestamp_seconds  # noqa: E402
 from sense_voice.llm import (  # noqa: E402
     assess_prompt,
@@ -32,60 +31,8 @@ from sense_voice.segments import (  # noqa: E402
 
 DEFAULT_CLIP = ROOT / "test_voice_clips" / "sunflower.mp3"
 DEFAULT_CLIPS = ROOT / "test_voice_clips"
-DEFAULT_REPORT = ROOT / "reports" / "benchmark" / "voice_llm_benchmark.md"
+DEFAULT_REPORT = BENCH_DIR / "reports" / "voice_llm_benchmark.md"
 DEFAULT_MODEL = "qwen3:1.7b"
-
-
-def run_asr(
-    audio: Path,
-    language: str,
-    *,
-    backend: str,
-    device: str | None,
-    model: str | None,
-) -> tuple[str, str, float | None, float, str, dict[str, object]]:
-    cmd = [
-        "pixi",
-        "run",
-        "python",
-        "scripts/sv.py",
-        str(audio),
-        "--quiet",
-        "-l",
-        language,
-        "--backend",
-        backend,
-        "--output-format",
-        "json",
-    ]
-    if device:
-        cmd.extend(["--device", device])
-    if model:
-        cmd.extend(["--model", model])
-    start = time.perf_counter()
-    proc = subprocess.run(
-        cmd,
-        cwd=ROOT,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        check=False,
-    )
-    elapsed = time.perf_counter() - start
-    if proc.returncode != 0:
-        raise RuntimeError(f"ASR failed for {audio.name}:\n{proc.stderr}")
-    try:
-        payload = json.loads(proc.stdout)
-    except json.JSONDecodeError:
-        return proc.stdout.strip(), proc.stdout.strip(), None, elapsed, proc.stderr.strip(), {}
-    return (
-        str(payload.get("text", "")).strip(),
-        str(payload.get("raw", "")).strip(),
-        payload.get("audio_seconds"),
-        elapsed,
-        proc.stderr.strip(),
-        payload,
-    )
 
 
 def md_code(text: str) -> str:

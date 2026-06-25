@@ -9,7 +9,7 @@
 | 本地开发 | Mac (`sense-voice/`) | 写代码；**ASR 用 `mac` 分支 cpp 或 mag 上测 official** |
 | GPU 测试 | `rmqlife-mag` | 官方 SenseVoice ASR（`cuda:0`）、Ollama（`nsfw-local:27b`）、长音频样例 |
 
-**分支**：`main` = FunASR official（mag）；`mac` = SenseVoice.cpp + Metal，见 [`docs/MAC.md`](docs/MAC.md)。
+**分支**：`main` = FunASR official（mag）；`mac` = SenseVoice.cpp + Metal（`main` 上 cpp 辅助脚本归档在 [`archive/mac/`](../archive/mac/)）。
 
 mag 上的仓库路径：
 
@@ -129,7 +129,7 @@ pixi run vr-subtitle-test -- \
 完整 LLM benchmark 仍可用：
 
 ```bash
-pixi run benchmark -- --clip ... --report reports/benchmark/... --srt-dir reports/srt ...
+pixi run benchmark -- --clip ... --report benchmark/reports/... --srt-dir reports/srt ...
 ```
 
 ### 结果回传（mag → Mac）

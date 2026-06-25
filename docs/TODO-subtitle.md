@@ -21,7 +21,7 @@
 | 缺少对齐层 | 没有 KrillinAI 的 `TimestampGenerator`（文本 ↔ 词级时间戳回对齐） | 无法在整理后重新计算 start/end |
 | 无 SRT 导出 | 只输出 Markdown timeline，无时长上限、无行内二次切分 | 无法直接用于烧录字幕 |
 
-### 实测样例（`reports/benchmark/vr_audio_benchmark*.md`）
+### 实测样例（`benchmark/reports/vr_audio_benchmark*.md`）
 
 - `[12:14.3-12:51.6]`：37s，ASR 原文是一大段口语粘连
 - `[11:00.3-11:34.3]`：34s

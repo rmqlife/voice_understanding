@@ -11,9 +11,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "python"))
-sys.path.insert(0, str(ROOT / "scripts"))
 
-import benchmark_voice_llm as bvl  # noqa: E402
+from sense_voice.asr_cli import run_asr  # noqa: E402
 from sense_voice.audio import ffprobe_duration, max_timestamp_seconds  # noqa: E402
 from sense_voice.llm import build_llm_input, chunk_text, generate_by_chunk, polish_prompt, stop_ollama_models  # noqa: E402
 from sense_voice.segments import format_timeline, parse_asr_segments, segment_duration_stats  # noqa: E402
@@ -94,7 +93,7 @@ def process_clip(
     skip_polish: bool,
 ) -> dict[str, object]:
     stop_ollama_models([polish_model])
-    asr_text, raw, result_audio_seconds, asr_seconds, stderr, asr_payload = bvl.run_asr(
+    asr_text, raw, result_audio_seconds, asr_seconds, stderr, asr_payload = run_asr(
         audio,
         language,
         backend=asr_backend,

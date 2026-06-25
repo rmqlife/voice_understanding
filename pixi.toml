@@ -6,28 +6,33 @@ channels = ["conda-forge"]
 platforms = ["osx-arm64", "linux-64"]
 
 [dependencies]
-cmake = ">=3.12"
-cxx-compiler = "*"
 python = "3.10.*"
 pip = "*"
 huggingface_hub = ">=0.20"
 ffmpeg = "*"
 
 [tasks]
-build = { cmd = "bash scripts/build.sh", description = "Build optional reference/SenseVoice.cpp (see docs/REFERENCE.md)" }
-download-model = { cmd = "python scripts/download_model.py", description = "Download GGUF model and sample audio" }
-test = { cmd = "python scripts/test_transcribe.py", description = "Run sample transcription" }
-test-srt = { cmd = "python scripts/test_srt_smoke.py", description = "Smoke tests for SRT split and timestamps (no GPU)" }
-test-transcript = { cmd = "python scripts/test_transcript_smoke.py", description = "Smoke tests for transcript assembly (no GPU)" }
+# Core ASR
 sv = { cmd = "python scripts/sv.py", description = "Transcribe audio file to text" }
-install-gpu = { cmd = "python -m pip install --upgrade pip && python -m pip install torch==2.3.0+cu121 torchaudio==2.3.0+cu121 --index-url https://download.pytorch.org/whl/cu121 && python -m pip install -i https://mirrors.aliyun.com/pypi/simple --trusted-host mirrors.aliyun.com modelscope huggingface 'huggingface_hub<1.0' 'funasr>=1.1.3' 'numpy<=1.26.4' 'transformers<5'", description = "Install official SenseVoice/FunASR CUDA dependencies" }
-benchmark = { cmd = "python scripts/benchmark_voice_llm.py", description = "Run voice + local LLM benchmark" }
-vr-subtitle-test = { cmd = "python scripts/vr_subtitle_test.py", description = "VR ASR metrics + ASR/ZH SRT export" }
-transcript-test = { cmd = "python scripts/transcript_test.py", description = "Speaker diarization + transcript md/json export" }
-download-transcript-models = { cmd = "python scripts/download_transcript_models.py", description = "Pre-download FunASR/pyannote models for transcript" }
-install-diarize = { cmd = "python -m pip install pyannote.audio", description = "Optional pyannote.audio for diarization compare" }
-compare-diarize = { cmd = "python scripts/compare_diarize.py", description = "Compare funasr vs pyannote diarization" }
-sync-vr-audio = { cmd = "python scripts/sync_vr_audio.py", description = "Extract WAV from NFS/gvfs VR video via ffmpeg" }
-publish-vr-srt = { cmd = "python scripts/publish_vr_srt.py", description = "Copy SRT next to NFS/gvfs VR video (same stem as mp4)" }
-sync-reports-from-mag = { cmd = "bash scripts/sync_from_mag.sh", description = "Rsync reports/ from rmqlife-mag" }
 extract-audio = { cmd = "python scripts/extract_audio.py", description = "Extract 16 kHz mono WAV from media files" }
+install-gpu = { cmd = "python -m pip install --upgrade pip && python -m pip install torch==2.3.0+cu121 torchaudio==2.3.0+cu121 --index-url https://download.pytorch.org/whl/cu121 && python -m pip install -i https://mirrors.aliyun.com/pypi/simple --trusted-host mirrors.aliyun.com modelscope huggingface 'huggingface_hub<1.0' 'funasr>=1.1.3' 'numpy<=1.26.4' 'transformers<5'", description = "Install official SenseVoice/FunASR CUDA dependencies" }
+
+# Subtitle line
+vr-subtitle-test = { cmd = "python scripts/vr_subtitle_test.py", description = "VR ASR metrics + ASR/ZH SRT export" }
+publish-vr-srt = { cmd = "python scripts/publish_vr_srt.py", description = "Copy SRT next to NFS/gvfs VR video (same stem as mp4)" }
+
+# Transcript line
+transcript-test = { cmd = "python scripts/transcript_test.py", description = "Speaker diarization + transcript md/json export" }
+download-transcript-models = { cmd = "python scripts/download_transcript_models.py", description = "Pre-download FunASR models for transcript" }
+
+# Benchmark (code + data + conclusions live under benchmark/)
+benchmark = { cmd = "python benchmark/benchmark_voice_llm.py", description = "Run voice + local LLM benchmark" }
+
+# Sync with mag
+sync-vr-audio = { cmd = "python scripts/sync_vr_audio.py", description = "Extract WAV from NFS/gvfs VR video via ffmpeg" }
+sync-reports-from-mag = { cmd = "bash scripts/sync_from_mag.sh", description = "Rsync reports/ from rmqlife-mag" }
+
+# No-GPU smoke tests
+test = { cmd = "python tests/test_transcribe.py", description = "Run sample transcription" }
+test-srt = { cmd = "python tests/test_srt_smoke.py", description = "Smoke tests for SRT split and timestamps (no GPU)" }
+test-transcript = { cmd = "python tests/test_transcript_smoke.py", description = "Smoke tests for transcript assembly (no GPU)" }

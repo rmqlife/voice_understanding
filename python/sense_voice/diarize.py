@@ -12,7 +12,7 @@ from .audio import ffprobe_duration
 from .models import FUNASR_DIARIZE_MODEL, FUNASR_SPK_MODEL
 from .transcribe import _ms_to_seconds
 
-DiarizeMethod = Literal["auto", "funasr", "pyannote", "ffmpeg-alternate", "vad"]
+DiarizeMethod = Literal["auto", "funasr", "ffmpeg-alternate"]
 
 
 @dataclass
@@ -201,92 +201,19 @@ def diarize_funasr(
     return turns
 
 
-def _normalize_pyannote_label(label: str, mapping: dict[str, str]) -> str:
-    if label not in mapping:
-        mapping[label] = f"SPEAKER_{len(mapping):02d}"
-    return mapping[label]
-
-
-def _pyannote_annotation(output: object, *, exclusive: bool = False):
-    """pyannote 4.x returns DiarizeOutput; 3.x returns Annotation directly."""
-    if exclusive:
-        annotation = getattr(output, "exclusive_speaker_diarization", None)
-        if annotation is not None:
-            return annotation
-    annotation = getattr(output, "speaker_diarization", None)
-    return output if annotation is None else annotation
-
-
-def diarize_pyannote(
-    audio_path: str | Path,
-    *,
-    device: str = "cuda:0",
-    hf_token: str | None = None,
-    exclusive: bool = False,
-) -> list[SpeakerTurn]:
-    """pyannote speaker-diarization-3.1. Requires HF_TOKEN and accepted model terms."""
-    import os
-
-    token = hf_token or os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACE_TOKEN")
-    if not token:
-        raise RuntimeError(
-            "pyannote diarization requires HF_TOKEN. "
-            "Accept terms at https://huggingface.co/pyannote/speaker-diarization-3.1"
-        )
-
-    try:
-        import torch
-        from pyannote.audio import Pipeline
-    except ImportError as exc:
-        raise RuntimeError(
-            "pyannote.audio is not installed. Run: pixi run install-diarize"
-        ) from exc
-
-    from .models import PYANNOTE_DIARIZE_MODEL, _load_pyannote_pipeline
-
-    pipeline = _load_pyannote_pipeline(PYANNOTE_DIARIZE_MODEL, token)
-    torch_device = torch.device(device if device.startswith("cuda") and torch.cuda.is_available() else "cpu")
-    pipeline.to(torch_device)
-    output = pipeline(str(audio_path))
-    annotation = _pyannote_annotation(output, exclusive=exclusive)
-
-    label_map: dict[str, str] = {}
-    turns: list[SpeakerTurn] = []
-    for segment, _, label in annotation.itertracks(yield_label=True):
-        turns.append(
-            SpeakerTurn(
-                speaker=_normalize_pyannote_label(str(label), label_map),
-                start=float(segment.start),
-                end=float(segment.end),
-            )
-        )
-    return sorted(turns, key=lambda turn: (turn.start, turn.end))
-
-
-def diarize_vad_alternate(*args: object, **kwargs: object) -> list[SpeakerTurn]:
-    """Deprecated alias for :func:`diarize_ffmpeg_alternate`."""
-    return diarize_ffmpeg_alternate(*args, **kwargs)  # type: ignore[arg-type]
-
-
 def diarize(
     audio_path: str | Path,
     *,
     method: DiarizeMethod = "auto",
     device: str = "cuda:0",
-    pyannote_exclusive: bool = False,
 ) -> tuple[list[SpeakerTurn], str]:
     """Return speaker turns and the method actually used."""
     path = Path(audio_path)
-    normalized = "ffmpeg-alternate" if method == "vad" else method
 
-    if normalized == "ffmpeg-alternate":
+    if method == "ffmpeg-alternate":
         return diarize_ffmpeg_alternate(path), "ffmpeg-alternate"
 
-    if normalized == "pyannote":
-        label = "pyannote-exclusive" if pyannote_exclusive else "pyannote"
-        return diarize_pyannote(path, device=device, exclusive=pyannote_exclusive), label
-
-    if normalized == "funasr":
+    if method == "funasr":
         return diarize_funasr(path, device=device), "funasr"
 
     try:

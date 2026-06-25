@@ -500,13 +500,13 @@ class SenseVoice:
                 f"sense-voice-main not found at {self.bin_path}. "
                 "On main, use --backend official, or checkout the mac branch. "
                 "Optional: git clone https://github.com/lovemefan/SenseVoice.cpp "
-                f"reference/SenseVoice.cpp && pixi run build"
+                f"reference/SenseVoice.cpp && bash archive/mac/build.sh"
             )
         model_path = Path(self.model_path)
         if not model_path.is_file():
             raise FileNotFoundError(
                 f"Model not found at {model_path}. "
-                "Run: pixi run download-model"
+                "Run: python archive/mac/download_model.py"
             )
 
         cmd = [

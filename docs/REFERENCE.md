@@ -10,7 +10,7 @@ git clone https://github.com/krillinai/KrillinAI reference/KrillinAI
 
 # 可选：main 上本地编译 cpp 后端（推荐 Mac 直接用 mac 分支）
 git clone https://github.com/lovemefan/SenseVoice.cpp reference/SenseVoice.cpp
-pixi run build   # 产物：reference/SenseVoice.cpp/build/bin/sense-voice-main
+bash archive/mac/build.sh   # 产物：reference/SenseVoice.cpp/build/bin/sense-voice-main
 ```
 
 | 路径 | 用途 | 是否在 main git |

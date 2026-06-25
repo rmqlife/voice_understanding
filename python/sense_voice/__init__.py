@@ -1,5 +1,6 @@
+from .asr_cli import run_asr
 from .audio import ffprobe_duration, get_audio_duration, max_timestamp_seconds
-from .diarize import SpeakerTurn, diarize, diarize_ffmpeg_alternate, diarize_vad_alternate
+from .diarize import SpeakerTurn, diarize, diarize_ffmpeg_alternate
 from .llm import (
     chunk_text,
     generate_by_chunk,
@@ -37,7 +38,6 @@ __all__ = [
     "chunk_text",
     "diarize",
     "diarize_ffmpeg_alternate",
-    "diarize_vad_alternate",
     "extract_official_segments",
     "ffprobe_duration",
     "generate_by_chunk",
@@ -51,6 +51,7 @@ __all__ = [
     "parse_srt_entries",
     "polish_prompt",
     "refine_segments",
+    "run_asr",
     "segment_duration_stats",
     "split_sentences",
     "srt_timestamp",

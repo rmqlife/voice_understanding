@@ -4,17 +4,17 @@
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "python"))
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "python"))
 
 from sense_voice import SenseVoice
 
-ROOT = Path(__file__).resolve().parents[1]
 SAMPLE = ROOT / "models" / "asr_example_zh.wav"
 
 
 def main() -> None:
     if not SAMPLE.is_file():
-        print("Sample audio missing. Run: pixi run download-model")
+        print("Sample audio missing: place a WAV at models/asr_example_zh.wav")
         sys.exit(1)
 
     sv = SenseVoice(backend="official", device="cpu", use_gpu=False)

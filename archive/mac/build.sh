@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"  # archive/mac/ -> repo root
 CPP_ROOT="${SENSE_VOICE_CPP_ROOT:-$ROOT/reference/SenseVoice.cpp}"
 BUILD_DIR="$CPP_ROOT/build"
 JOBS="$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)"

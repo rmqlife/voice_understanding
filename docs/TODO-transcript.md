@@ -19,10 +19,10 @@
 | CLI `--diarize-method` | 实际用的 | 用途 |
 |------------------------|----------|------|
 | `funasr`（**默认主路径**） | FunASR `fsmn-vad` + `cam++` | 真·说话人 turn |
-| `pyannote` | `pyannote/speaker-diarization-3.1` | 对比 / 细粒度 turn（需 `HF_TOKEN`） |
 | `auto` | 同 `funasr`；失败才 fallback | 日常测试 |
 | `ffmpeg-alternate` | **ffmpeg `silencedetect`** + 奇偶 `SPEAKER_00/01` | 仅 debug baseline，**不是 FunASR VAD** |
-| ~~`vad`~~ | → `ffmpeg-alternate` 别名（废弃） | 旧参数兼容 |
+
+> `pyannote` 与废弃的 `vad` 别名已从 `main` 移除；pyannote 代码快照与对比报告见 [`archive/pyannote/`](../archive/pyannote/)。
 
 **已有、不重复下载的 VAD：**
 
@@ -65,7 +65,7 @@
 ## P1 — 已完成（上一轮）
 
 - [ ] 耿瑞香 / 景宜人工抽检
-- [x] **pyannote.audio 对比** — `diarize_pyannote()` + `pixi run compare-diarize`
+- [x] **pyannote.audio 对比实验** — 结论：与 funasr 相当，不作为主路径（`compare-diarize` 脚本已移除）
 - [x] **可选说话人命名** — `--name-speakers` + `speaker_names.py`
 - [ ] 可选：会议纪要摘要（单独 profile）
 
@@ -85,10 +85,7 @@ pixi run transcript-test -- \
   --report reports/transcript/geng_ruixiang_p1_metrics.md \
   2>&1 | tee reports/transcript/logs/geng_ruixiang_p1_run.log
 
-# 对比 funasr vs pyannote（需 HF_TOKEN）
-pixi run compare-diarize -- \
-  --clip "test_voice_clips/微信录音 耿瑞香_20250326090128_45748064860651968.aac" \
-  --report reports/transcript/geng_diarize_compare.md
+# pyannote 已归档（见 archive/pyannote/）；main 上 --diarize-method 仅 auto/funasr/ffmpeg-alternate
 
 # 说话人命名（LLM）
 pixi run transcript-test -- \
@@ -99,16 +96,9 @@ pixi run transcript-test -- \
 
 Mac：`pixi run sync-reports-from-mag`
 
-### pyannote 对比（耿瑞香 + diary）
+### pyannote（已归档）
 
-```bash
-export HF_TOKEN=...   # 需先 pixi run install-diarize 并在 HF 接受条款
-pixi run compare-diarize -- \
-  --clip "test_voice_clips/微信录音 耿瑞香_20250326090128_45748064860651968.aac" \
-  --clip test_voice_clips/2026-04-02-diary.wav \
-  --device cuda:0 \
-  --report reports/transcript/diarize_compare.md
-```
+实验结论见上文 P2。代码快照与对比报告在 [`archive/pyannote/`](../archive/pyannote/)；复现步骤见 [`archive/README.md`](../archive/README.md)。
 
 ### 说话人命名
 

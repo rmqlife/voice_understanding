@@ -5,11 +5,12 @@ from __future__ import annotations
 
 import argparse
 import shutil
+import sys
 from pathlib import Path
 
-from sync_vr_audio import DEFAULT_NFS_GLOB
-
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from sync_vr_audio import DEFAULT_NFS_GLOB
 DEFAULT_SRT_DIR = ROOT / "reports" / "srt"
 
 # WAV stem used in reports/srt/ when produced via sync_vr_audio + vr-subtitle-test.

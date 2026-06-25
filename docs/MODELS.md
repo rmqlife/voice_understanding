@@ -5,7 +5,7 @@
 | 用途 | 环境变量 | 默认路径 |
 |------|----------|----------|
 | FunASR / ModelScope | `MODELSCOPE_CACHE` | `~/.cache/modelscope` |
-| Hugging Face / pyannote | `HF_HOME` | `~/.cache/huggingface` |
+| Hugging Face | `HF_HOME` | `~/.cache/huggingface` |
 | Hugging Face token | `HF_TOKEN` | — |
 
 代码入口：`python/sense_voice/models.py` → `modelscope_cache_dir()` / `huggingface_cache_dir()`
@@ -15,11 +15,6 @@
 ```bash
 # mag：ASR + FunASR cam++ diarization
 pixi run download-transcript-models -- --device cuda:0
-
-# 可选：pyannote（需先在 HF 接受模型条款并设置 HF_TOKEN）
-export HF_TOKEN=...
-pixi run install-diarize
-pixi run download-transcript-models -- --pyannote
 ```
 
 ## 模型清单
@@ -28,7 +23,6 @@ pixi run download-transcript-models -- --pyannote
 |------|------|------|
 | `iic/SenseVoiceSmall` | ASR | `pixi run sv --backend official` |
 | `iic/speech_seaco_paraformer_large_...` + `cam++` | 说话人 diarization | `transcript-test --diarize-method funasr` |
-| `pyannote/speaker-diarization-3.1` | diarization 对比 | `compare-diarize` / `--diarize-method pyannote` |
 
 ## 长音频 ASR 分块
 

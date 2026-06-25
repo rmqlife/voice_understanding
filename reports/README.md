@@ -11,11 +11,11 @@ reports/
 ├── subtitle/
 │   ├── metrics/           ← vr-subtitle-test 指标 .md + .json
 │   └── logs/              ← 运行 tee 日志
-├── benchmark/             ← LLM benchmark 长报告
-├── transcript/            ← 转写线 md/json + 指标
-│   └── logs/              ← 运行 tee 日志
-├── web_llm_tasks/         ← mac 分支 Web LLM 任务导出（可选）
+└── transcript/            ← 转写线 md/json + 指标
+    └── logs/              ← 运行 tee 日志
 ```
+
+> LLM benchmark 报告不在这里，已随代码移到 [`benchmark/reports/`](../benchmark/reports/)。
 
 ## srt/
 
@@ -41,14 +41,6 @@ reports/
 | `<clip>.md` / `<clip>.json` | 按说话人转写正文 |
 | `*_metrics.md` | `transcript-test --report` 指标 |
 | `logs/*_run.log` | mag 运行日志 |
-
-## benchmark/
-
-| 文件 | 说明 |
-|------|------|
-| `vr_audio_benchmark.md` | VR 全量 benchmark |
-| `vr_audio_benchmark_kavr500*.md` | KAVR500 各版本报告 |
-| `voice_llm_benchmark.md` | 通用 voice+LLM benchmark |
 
 ## 在 mag 上跑新测试时
 

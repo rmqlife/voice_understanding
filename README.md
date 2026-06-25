@@ -7,9 +7,20 @@
 | **`main`** | `official`（FunASR / CUDA） | mag GPU 测试、字幕/转写主线；**不含** SenseVoice.cpp |
 | **`mac`** | `cpp`（SenseVoice.cpp + Metal） | Mac 本地开发；仓库内 vendor `SenseVoice.cpp/` |
 
-Mac 上请 `git checkout mac`，详见 [`docs/MAC.md`](docs/MAC.md)（仅 mac 分支）。
+Mac 上请 `git checkout mac`；`main` 上的 cpp/Metal 辅助脚本已归档到 [`archive/mac/`](archive/mac/)。
 
 本 README 以下以 **`main` / `official`** 为准。
+
+项目结构（详见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)）：
+
+| 目录 | 内容 |
+|------|------|
+| `python/sense_voice/` | 库：所有共享逻辑 |
+| `scripts/` | 扁平 CLI 入口（见 [`scripts/README.md`](scripts/README.md)） |
+| `benchmark/` | LLM benchmark 代码 + 数据 + 结论 |
+| `tests/` | 无 GPU 冒烟测试 |
+| `reports/` | 字幕 / 转写运行产物 |
+| `archive/` | 已归档实验（pyannote / mac-cpp / vad） |
 
 ## Linux GPU 官方包（main）
 
@@ -32,15 +43,8 @@ pixi run sv your-audio.wav --backend official --device cuda:0 --model iic/SenseV
 
 ## macOS / SenseVoice.cpp
 
-请使用 **`mac` 分支**（含 `SenseVoice.cpp/`）：
-
-```bash
-git checkout mac
-pixi run build && pixi run download-model
-pixi run sv models/asr_example_zh.wav --backend cpp
-```
-
-详见 mac 分支 [`docs/MAC.md`](docs/MAC.md)。
+请使用 **`mac` 分支**（含 `SenseVoice.cpp/`）。`main` 上的构建/下载脚本已归档在
+[`archive/mac/`](archive/mac/)（`build.sh`、`download_model.py`、`MAC.md`），仅供参考。
 
 ## 本地 LLM Benchmark
 
@@ -75,9 +79,7 @@ pixi run benchmark -- \
   --language zh
 ```
 
-使用 mac 分支 C++ 后端见 mac 分支 [`docs/MAC.md`](docs/MAC.md)。
-
-报告输出到 `reports/voice_llm_benchmark.md`。
+benchmark 代码、数据和结论都在 [`benchmark/`](benchmark/)；默认报告输出到 `benchmark/reports/voice_llm_benchmark.md`。
 
 ## VR / 视频音轨 Benchmark
 
@@ -95,7 +97,7 @@ pixi run extract-audio -- \
 ```bash
 pixi run benchmark -- \
   --clip test_voice_clips/vr_sample.wav \
-  --report reports/benchmark/vr_audio_benchmark.md \
+  --report benchmark/reports/vr_audio_benchmark.md \
   --asr-backend official \
   --asr-device cuda:0 \
   --model nsfw-local:27b \
@@ -118,7 +120,7 @@ sv = SenseVoice(backend="official", device="cuda:0", language="zh")
 print(sv.transcribe("test_voice_clips/sunflower.mp3"))
 ```
 
-Mac C++ 示例见 `mac` 分支 [`docs/MAC.md`](docs/MAC.md)。
+Mac C++ 示例见 `mac` 分支。
 
 ## 环境变量
 
