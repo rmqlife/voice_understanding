@@ -1,0 +1,8 @@
+✨ [1mPixi task ([0m[32m[1mvr-subtitle-test[0m[1m): [0m[34m[1mpython scripts/vr_subtitle_test.py[0m [34m--repolish-only --repolish-asr --srt-dir results/srt --run-label translate_fix_all --report results/subtitle/metrics/translate_fix_all.md[0m[33m: (VR ASR metrics + ASR/ZH SRT export)[0m
+Repolishing DSVR-2001-#未知女优__DSVR-2001-CD1.asr.srt
+gpu: stop Ollama after polish (nsfw-local:27b)
+Repolishing DSVR-2001-#未知女优__DSVR-2001-CD2.asr.srt
+batch start 2026-06-25T22:25:42+08:00
+=== repolish DSVR-2001-#未知女优__DSVR-2001-CD1 2026-06-25T22:25:42+08:00 ===
+✨ [1mPixi task ([0m[32m[1mvr-subtitle-test[0m[1m): [0m[34m[1mpython scripts/vr_subtitle_test.py[0m [34m--repolish-only --repolish-asr --name-filter DSVR-2001-#未知女优__DSVR-2001-CD1 --srt-dir results/srt --run-label translate_fix_DSVR-2001-#未知女优__DSVR-2001-CD1 --report results/subtitle/metrics/translate_fix_DSVR-2001-#未知女优__DSVR-2001-CD1.md[0m[33m: (VR ASR metrics + ASR/ZH SRT export)[0m
+Repolishing DSVR-2001-#未知女优__DSVR-2001-CD1.asr.srt

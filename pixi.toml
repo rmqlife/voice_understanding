@@ -19,6 +19,9 @@ install-gpu = { cmd = "python -m pip install --upgrade pip && python -m pip inst
 
 # Subtitle line
 vr-subtitle-test = { cmd = "python scripts/vr_subtitle_test.py", description = "VR ASR metrics + ASR/ZH SRT export" }
+add-subtitle = { cmd = "python scripts/add_subtitle.py", description = "NFS VR mp4 → WAV → SRT → copy back to NFS" }
+gen-subtitle-task = { cmd = "python scripts/gen_subtitle_task.py", description = "Generate subtitle task.toml from mp4 list" }
+run-subtitle-task = { cmd = "python scripts/run_subtitle_task.py", description = "Process mp4 paths from subtitle task.toml" }
 publish-vr-srt = { cmd = "python scripts/publish_vr_srt.py", description = "Copy SRT next to NFS/gvfs VR video (same stem as mp4)" }
 
 # Transcript line
@@ -30,9 +33,11 @@ benchmark = { cmd = "python benchmark/benchmark_voice_llm.py", description = "Ru
 
 # Sync with mag
 sync-vr-audio = { cmd = "python scripts/sync_vr_audio.py", description = "Extract WAV from NFS/gvfs VR video via ffmpeg" }
-sync-reports-from-mag = { cmd = "bash scripts/sync_from_mag.sh", description = "Rsync reports/ from rmqlife-mag" }
+sync-results-from-mag = { cmd = "bash scripts/sync_from_mag.sh", description = "Rsync results/ from rmqlife-mag" }
 
 # No-GPU smoke tests
-test = { cmd = "python tests/test_transcribe.py", description = "Run sample transcription" }
-test-srt = { cmd = "python tests/test_srt_smoke.py", description = "Smoke tests for SRT split and timestamps (no GPU)" }
-test-transcript = { cmd = "python tests/test_transcript_smoke.py", description = "Smoke tests for transcript assembly (no GPU)" }
+test = { cmd = "python scripts/tests/test_transcribe.py", description = "Run sample transcription" }
+test-srt = { cmd = "python scripts/tests/test_srt_smoke.py", description = "Smoke tests for SRT split and timestamps (no GPU)" }
+test-transcript = { cmd = "python scripts/tests/test_transcript_smoke.py", description = "Smoke tests for transcript assembly (no GPU)" }
+test-vr-sources = { cmd = "python scripts/tests/test_vr_sources.py", description = "Smoke tests for VR NFS path helpers (no GPU)" }
+test-subtitle-task = { cmd = "python scripts/tests/test_subtitle_task.py", description = "Smoke tests for subtitle task.toml (no GPU)" }

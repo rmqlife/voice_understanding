@@ -406,7 +406,7 @@
           <tr><td><code>python/sense_voice/subtitle.py</code></td><td>拆句、细化 segment、润色后重对齐、静音切分点</td></tr>
           <tr><td><code>python/sense_voice/srt.py</code></td><td>SRT 读写、显示级切分（12字/6秒）</td></tr>
           <tr><td><code>scripts/vr_subtitle_test.py</code></td><td>一键测试：ASR → 双 SRT → 指标报告</td></tr>
-          <tr><td><code>scripts/sync_from_mag.sh</code></td><td>从 mag 拉回 <code>reports/</code></td></tr>
+          <tr><td><code>scripts/sync_from_mag.sh</code></td><td>从 mag 拉回 <code>results/</code></td></tr>
         </tbody>
       </table>
     </section>
@@ -416,14 +416,14 @@
       <pre># mag 上
 cd ~/work/voice_understanding && git pull
 pixi run vr-subtitle-test -- \
-  --clips test_voice_clips --name-filter kavr \
-  --report reports/subtitle/metrics/kavr_p1_subtitle_metrics.md \
+  --clips data/vr --name-filter kavr \
+  --report results/subtitle/metrics/kavr_p1_subtitle_metrics.md \
   --run-label my_run \
   --asr-backend official --asr-device cuda:0 \
   --polish-model nsfw-local:27b --language ja --profile subtitle
 
 # Mac 上拉回
-pixi run sync-reports-from-mag</pre>
+pixi run sync-results-from-mag</pre>
       <p class="muted">详见仓库 <code>RULE.md</code>（开发规范）与 <code>TODO.md</code>（改进路线）。</p>
     </section>
   </main>

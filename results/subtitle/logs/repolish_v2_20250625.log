@@ -1,0 +1,109 @@
+start 2026-06-25T22:54:05+08:00
+✨ [1mPixi task ([0m[32m[1mvr-subtitle-test[0m[1m): [0m[34m[1mpython scripts/vr_subtitle_test.py[0m [34m--repolish-only --repolish-asr --name-filter  --chunk-segments 80 --continue-on-error --publish[0m[33m: (VR ASR metrics + ASR/ZH SRT export)[0m
+Repolishing DSVR-2001-#未知女优__DSVR-2001-CD1.asr.srt
+restart 2026-06-25T22:56:09+08:00
+✨ [1mPixi task ([0m[32m[1mvr-subtitle-test[0m[1m): [0m[34m[1mpython scripts/vr_subtitle_test.py[0m [34m--repolish-only --repolish-asr --name-filter  --chunk-segments 80 --continue-on-error --publish[0m[33m: (VR ASR metrics + ASR/ZH SRT export)[0m
+Repolishing DSVR-2001-#未知女优__DSVR-2001-CD1.asr.srt
+✨ [1mPixi task ([0m[32m[1mvr-subtitle-test[0m[1m): [0m[34m[1mpython scripts/vr_subtitle_test.py[0m [34m--repolish-only --repolish-asr --name-filter  --chunk-segments 80 --continue-on-error --publish[0m[33m: (VR ASR metrics + ASR/ZH SRT export)[0m
+Repolishing DSVR-2001-#未知女优__DSVR-2001-CD1.asr.srt
+✨ [1mPixi task ([0m[32m[1mvr-subtitle-test[0m[1m): [0m[34m[1mpython scripts/vr_subtitle_test.py[0m [34m--repolish-only --repolish-asr --name-filter  --chunk-segments 80 --continue-on-error --publish[0m[33m: (VR ASR metrics + ASR/ZH SRT export)[0m
+Repolishing DSVR-2001-#未知女优__DSVR-2001-CD1.asr.srt
+✨ [1mPixi task ([0m[32m[1mvr-subtitle-test[0m[1m): [0m[34m[1mpython scripts/vr_subtitle_test.py[0m [34m--repolish-only --repolish-asr --name-filter  --chunk-segments 80 --continue-on-error --publish[0m[33m: (VR ASR metrics + ASR/ZH SRT export)[0m
+Repolishing DSVR-2001-#未知女优__DSVR-2001-CD1.asr.srt
+✨ [1mPixi task ([0m[32m[1mvr-subtitle-test[0m[1m): [0m[34m[1mpython scripts/vr_subtitle_test.py[0m [34m--repolish-only --repolish-asr --name-filter  --chunk-segments 80 --continue-on-error --publish[0m[33m: (VR ASR metrics + ASR/ZH SRT export)[0m
+Repolishing DSVR-2001-#未知女优__DSVR-2001-CD1.asr.srt
+batch start 2026-06-25T23:08:58+08:00
+✨ [1mPixi task ([0m[32m[1mvr-subtitle-test[0m[1m): [0m[34m[1mpython scripts/vr_subtitle_test.py[0m [34m--repolish-only --repolish-asr --name-filter  --chunk-segments 80 --continue-on-error --publish[0m[33m: (VR ASR metrics + ASR/ZH SRT export)[0m
+Repolishing DSVR-2001-#未知女优__DSVR-2001-CD1.asr.srt
+publish -> /mnt/fnos/jav/#finished/DSVR-2001-#未知女优
+/mnt/fnos/jav/#finished/DSVR-2001-#未知女优/DSVR-2001-CD1.asr.srt
+/mnt/fnos/jav/#finished/DSVR-2001-#未知女优/DSVR-2001-CD1.zh.srt
+Repolishing DSVR-2001-#未知女优__DSVR-2001-CD2.asr.srt
+publish -> /mnt/fnos/jav/#finished/DSVR-2001-#未知女优
+/mnt/fnos/jav/#finished/DSVR-2001-#未知女优/DSVR-2001-CD2.asr.srt
+/mnt/fnos/jav/#finished/DSVR-2001-#未知女优/DSVR-2001-CD2.zh.srt
+Repolishing KAVR-5008K__489155.com@KAVR-500.PART2_8K.asr.srt
+publish -> /mnt/fnos/jav/#finished/KAVR-5008K
+/mnt/fnos/jav/#finished/KAVR-5008K/489155.com@KAVR-500.PART2_8K.asr.srt
+/mnt/fnos/jav/#finished/KAVR-5008K/489155.com@KAVR-500.PART2_8K.zh.srt
+Repolishing KAVR-5008K__489155.com@KAVR-500.PART3_8K.asr.srt
+publish -> /mnt/fnos/jav/#finished/KAVR-5008K
+/mnt/fnos/jav/#finished/KAVR-5008K/489155.com@KAVR-500.PART3_8K.asr.srt
+/mnt/fnos/jav/#finished/KAVR-5008K/489155.com@KAVR-500.PART3_8K.zh.srt
+Repolishing KAVR-506-伊藤舞雪__KAVR-506-CD1.asr.srt
+publish -> /mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪
+/mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD1.asr.srt
+/mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD1.zh.srt
+Repolishing KAVR-506-伊藤舞雪__KAVR-506-CD2.asr.srt
+publish -> /mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪
+/mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD2.asr.srt
+/mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD2.zh.srt
+Repolishing KAVR-506-伊藤舞雪__KAVR-506-CD3.asr.srt
+publish -> /mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪
+/mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD3.asr.srt
+/mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD3.zh.srt
+Repolishing KAVR-506-伊藤舞雪__KAVR-506-CD4.asr.srt
+publish -> /mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪
+/mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD4.asr.srt
+/mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD4.zh.srt
+Repolishing KAVR-506-伊藤舞雪__KAVR-506-CD5.asr.srt
+publish -> /mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪
+/mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD5.asr.srt
+/mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD5.zh.srt
+Repolishing KAVR-506-伊藤舞雪__KAVR-506-CD6.asr.srt
+publish -> /mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪
+/mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD6.asr.srt
+/mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD6.zh.srt
+Repolishing MDVR-426-森日向子__MDVR-426-CD1.asr.srt
+publish -> /mnt/fnos/jav/#finished/MDVR-426-森日向子
+/mnt/fnos/jav/#finished/MDVR-426-森日向子/MDVR-426-CD1.asr.srt
+/mnt/fnos/jav/#finished/MDVR-426-森日向子/MDVR-426-CD1.zh.srt
+Repolishing MDVR-426-森日向子__MDVR-426-CD2.asr.srt
+publish -> /mnt/fnos/jav/#finished/MDVR-426-森日向子
+/mnt/fnos/jav/#finished/MDVR-426-森日向子/MDVR-426-CD2.asr.srt
+/mnt/fnos/jav/#finished/MDVR-426-森日向子/MDVR-426-CD2.zh.srt
+Repolishing SAVR-1080-#未知女优__SAVR-1080-CD1.asr.srt
+publish -> /mnt/fnos/jav/#finished/SAVR-1080-#未知女优
+/mnt/fnos/jav/#finished/SAVR-1080-#未知女优/SAVR-1080-CD1.asr.srt
+/mnt/fnos/jav/#finished/SAVR-1080-#未知女优/SAVR-1080-CD1.zh.srt
+Repolishing SAVR-1080-#未知女优__SAVR-1080-CD2.asr.srt
+publish -> /mnt/fnos/jav/#finished/SAVR-1080-#未知女优
+/mnt/fnos/jav/#finished/SAVR-1080-#未知女优/SAVR-1080-CD2.asr.srt
+/mnt/fnos/jav/#finished/SAVR-1080-#未知女优/SAVR-1080-CD2.zh.srt
+Repolishing SAVR-1112-葉月なぎさ__SAVR-1112-CD1.asr.srt
+publish -> /mnt/fnos/jav/#finished/SAVR-1112-葉月なぎさ
+/mnt/fnos/jav/#finished/SAVR-1112-葉月なぎさ/SAVR-1112-CD1.asr.srt
+/mnt/fnos/jav/#finished/SAVR-1112-葉月なぎさ/SAVR-1112-CD1.zh.srt
+Repolishing SAVR-1112-葉月なぎさ__SAVR-1112-CD2.asr.srt
+failed SAVR-1112-葉月なぎさ__SAVR-1112-CD2.asr.srt: timed out
+Repolishing SAVR-1112-葉月なぎさ__SAVR-1112-CD3.asr.srt
+publish -> /mnt/fnos/jav/#finished/SAVR-1112-葉月なぎさ
+/mnt/fnos/jav/#finished/SAVR-1112-葉月なぎさ/SAVR-1112-CD3.asr.srt
+/mnt/fnos/jav/#finished/SAVR-1112-葉月なぎさ/SAVR-1112-CD3.zh.srt
+Repolishing VRKM-1828-逢沢みゆ__VRKM-1828-CD1.asr.srt
+publish -> /mnt/fnos/jav/#finished/VRKM-1828-逢沢みゆ
+/mnt/fnos/jav/#finished/VRKM-1828-逢沢みゆ/VRKM-1828-CD1.asr.srt
+/mnt/fnos/jav/#finished/VRKM-1828-逢沢みゆ/VRKM-1828-CD1.zh.srt
+Repolishing VRKM-1828-逢沢みゆ__VRKM-1828-CD2.asr.srt
+publish -> /mnt/fnos/jav/#finished/VRKM-1828-逢沢みゆ
+/mnt/fnos/jav/#finished/VRKM-1828-逢沢みゆ/VRKM-1828-CD2.asr.srt
+/mnt/fnos/jav/#finished/VRKM-1828-逢沢みゆ/VRKM-1828-CD2.zh.srt
+Repolishing VRKM-1850-沙月恵奈_月野かすみ__VRKM-1850-CD1.asr.srt
+failed VRKM-1850-沙月恵奈_月野かすみ__VRKM-1850-CD1.asr.srt: timed out
+Repolishing VRKM-1850-沙月恵奈_月野かすみ__VRKM-1850-CD2.asr.srt
+skip publish (mp4 not found): VRKM-1850-沙月恵奈_月野かすみ__VRKM-1850-CD2
+Repolishing VRKM-1850-沙月恵奈_月野かすみ__VRKM-1850-CD3.asr.srt
+skip publish (mp4 not found): VRKM-1850-沙月恵奈_月野かすみ__VRKM-1850-CD3
+Repolishing VRKM-1850-沙月恵奈_月野かすみ__VRKM-1850-CD4.asr.srt
+skip publish (mp4 not found): VRKM-1850-沙月恵奈_月野かすみ__VRKM-1850-CD4
+Repolishing vr_kavr500_part2.asr.srt
+skip publish (mp4 not found): vr_kavr500_part2
+Repolishing vr_kavr500_part3.asr.srt
+skip publish (mp4 not found): vr_kavr500_part3
+Repolishing vr_savr_799_sample.asr.srt
+skip publish (mp4 not found): vr_savr_799_sample
+Repolishing 微信录音 耿瑞香_20250326090128_45748064860651968.asr.srt
+gpu: stop Ollama after polish (nsfw-local:27b)
+skip publish (mp4 not found): 微信录音 耿瑞香_20250326090128_45748064860651968
+Wrote /home/rmqlife/work/voice_understanding/results/vr_subtitle_test_metrics.md
+Wrote /home/rmqlife/work/voice_understanding/results/vr_subtitle_test_metrics.json

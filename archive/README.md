@@ -4,8 +4,8 @@
 
 | 目录 | 内容 | 归档原因 |
 |------|------|----------|
-| `pyannote/` | `diarize_pyannote.py`、`models_pyannote.py` 快照 + 对比报告 | 实验结论：与 FunASR cam++ 相当，非主路径（见 `docs/TODO-transcript.md`） |
-| `reports/` | `diarize_compare.*`、`geng_ruixiang_vad_*` | vad / diarize 对比实验产物 |
+| `pyannote/` | `diarize_pyannote.py`、`models_pyannote.py` 快照 + 对比报告 | 实验结论：与 FunASR cam++ 相当，非主路径（见 `.agent/TODO-transcript.md`） |
+| `results/`（历史路径 `reports/`） | `diarize_compare.*`、`geng_ruixiang_vad_*` | vad / diarize 对比实验产物 |
 | `mac/` | `build.sh`、`download_model.py`、`MAC.md` | SenseVoice.cpp / Metal 仅 `mac` 分支用，`main` 不需要 |
 
 ## 如何复活 pyannote

@@ -198,9 +198,51 @@ def parse_time_label(label: str) -> float | None:
   return None
 
 
+def parse_srt_timestamp_label(label: str) -> float | None:
+  label = label.strip()
+  match = re.match(r"(\d+):(\d+):(\d+),(\d+)", label)
+  if match:
+    hours, minutes, seconds, millis = match.groups()
+    return int(hours) * 3600 + int(minutes) * 60 + int(seconds) + int(millis) / 1000
+  return parse_time_label(label)
+
+
+def read_srt_file(content: str) -> list[SrtEntry]:
+  """Parse standard SRT blocks (index / timestamps / text)."""
+  entries: list[SrtEntry] = []
+  for block in re.split(r"\n\s*\n", content.strip()):
+    lines = [line for line in block.strip().splitlines() if line.strip()]
+    if len(lines) < 3:
+      continue
+    time_match = re.match(r"(.+?)\s*-->\s*(.+)", lines[1].strip())
+    if not time_match:
+      continue
+    start = parse_srt_timestamp_label(time_match.group(1))
+    end = parse_srt_timestamp_label(time_match.group(2))
+    text = "\n".join(lines[2:]).strip()
+    if start is None or end is None or end <= start or not text:
+      continue
+    entries.append((start, end, text))
+  return entries
+
+
+def reclean_srt_entries(entries: list[SrtEntry]) -> list[SrtEntry]:
+  """Re-apply subtitle text cleaning (drop fillers, fix punctuation) without re-running LLM."""
+  from .llm import clean_polished_subtitle_text
+
+  cleaned: list[SrtEntry] = []
+  for start, end, text in entries:
+    new_text = clean_polished_subtitle_text(text)
+    if new_text:
+      cleaned.append((start, end, new_text))
+  return cleaned
+
+
 def parse_srt_entries(polished: str) -> list[SrtEntry]:
   entries: list[SrtEntry] = []
   for line in polished.splitlines():
+    if line.strip().startswith("##"):
+      break
     match = SRT_LINE_PATTERN.match(line)
     if not match:
       continue
@@ -238,12 +280,38 @@ def _words_in_range(words: list[Word], start: float, end: float) -> list[Word]:
   ]
 
 
+def _split_entry_proportionally(
+  start: float,
+  end: float,
+  chunks: list[str],
+) -> list[SrtEntry]:
+  duration = max(0.0, end - start)
+  total_weight = sum(calc_weighted_length(chunk) for chunk in chunks)
+  entries: list[SrtEntry] = []
+  last_end = start
+  for index, chunk in enumerate(chunks):
+    if index == len(chunks) - 1:
+      chunk_end = end
+    else:
+      ratio = calc_weighted_length(chunk) / max(1.0, total_weight)
+      chunk_end = min(end, last_end + duration * ratio)
+    if chunk_end <= last_end:
+      chunk_end = min(end, last_end + 0.2)
+    entries.append((last_end, chunk_end, chunk))
+    last_end = chunk_end
+  if entries:
+    entries[0] = (start, entries[0][1], entries[0][2])
+    entries[-1] = (entries[-1][0], end, entries[-1][2])
+  return entries
+
+
 def split_entry_by_words(
   start: float,
   end: float,
   text: str,
   words: list[Word],
   *,
+  timing_text: str | None = None,
   max_chars: int | float = DEFAULT_MAX_SRT_WEIGHT,
   max_duration: float | None = DEFAULT_MAX_SRT_DURATION,
 ) -> list[SrtEntry]:
@@ -257,6 +325,11 @@ def split_entry_by_words(
   chunks = _split_text_chunks(text, max_weight)
   if len(chunks) <= 1:
     return [(start, end, text)]
+
+  align_text = timing_text if timing_text is not None else text
+  cross_language = timing_text is not None and timing_text.strip() != text.strip()
+  if cross_language:
+    return _merge_fragment_entries(_split_entry_proportionally(start, end, chunks))
 
   entries: list[SrtEntry] = []
   last_end = start
@@ -279,17 +352,20 @@ def split_entries_for_display(
   entries: list[SrtEntry],
   words: list[Word],
   *,
+  timing_texts: list[str] | None = None,
   max_chars: int | float = DEFAULT_MAX_SRT_WEIGHT,
   max_duration: float | None = DEFAULT_MAX_SRT_DURATION,
 ) -> list[SrtEntry]:
   output: list[SrtEntry] = []
-  for start, end, text in entries:
+  for index, (start, end, text) in enumerate(entries):
+    timing_text = timing_texts[index] if timing_texts and index < len(timing_texts) else None
     output.extend(
       split_entry_by_words(
         start,
         end,
         text,
         words,
+        timing_text=timing_text,
         max_chars=max_chars,
         max_duration=max_duration,
       )

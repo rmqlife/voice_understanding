@@ -1,0 +1,185 @@
+=== vr_batch start 2026-06-25T16:01:58+08:00 ===
+✨ [1mPixi task ([0m[32m[1mrun-subtitle-task[0m[1m): [0m[34m[1mpython scripts/run_subtitle_task.py[0m [34mtasks/vr_batch.toml --continue-on-error[0m[33m: (Process mp4 paths from subtitle task.toml)[0m
+task: vr_batch (18 enabled videos)
+
+[1/18] /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/DSVR-2001-#未知女优/DSVR-2001-CD1.mp4
+extract /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/DSVR-2001-#未知女优/DSVR-2001-CD1.mp4 -> /home/rmqlife/work/voice_understanding/data/vr/DSVR-2001-#未知女优__DSVR-2001-CD1.wav
+subtitle /home/rmqlife/work/voice_understanding/data/vr/DSVR-2001-#未知女优__DSVR-2001-CD1.wav
+gpu: stop Ollama before ASR
+gpu: wait for VRAM after ASR
+gpu: stop Ollama after polish (nsfw-local:27b)
+publish -> /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/DSVR-2001-#未知女优
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/DSVR-2001-#未知女优/DSVR-2001-CD1.asr.srt
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/DSVR-2001-#未知女优/DSVR-2001-CD1.zh.srt
+
+[2/18] /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/DSVR-2001-#未知女优/DSVR-2001-CD2.mp4
+extract /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/DSVR-2001-#未知女优/DSVR-2001-CD2.mp4 -> /home/rmqlife/work/voice_understanding/data/vr/DSVR-2001-#未知女优__DSVR-2001-CD2.wav
+subtitle /home/rmqlife/work/voice_understanding/data/vr/DSVR-2001-#未知女优__DSVR-2001-CD2.wav
+gpu: stop Ollama before ASR
+gpu: wait for VRAM after ASR
+gpu: stop Ollama after polish (nsfw-local:27b)
+publish -> /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/DSVR-2001-#未知女优
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/DSVR-2001-#未知女优/DSVR-2001-CD2.asr.srt
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/DSVR-2001-#未知女优/DSVR-2001-CD2.zh.srt
+
+[3/18] /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-5008K/489155.com@KAVR-500.PART2_8K.mp4
+extract /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-5008K/489155.com@KAVR-500.PART2_8K.mp4 -> /home/rmqlife/work/voice_understanding/data/vr/KAVR-5008K__489155.com@KAVR-500.PART2_8K.wav
+subtitle /home/rmqlife/work/voice_understanding/data/vr/KAVR-5008K__489155.com@KAVR-500.PART2_8K.wav
+gpu: stop Ollama before ASR
+gpu: wait for VRAM after ASR
+gpu: stop Ollama after polish (nsfw-local:27b)
+publish -> /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-5008K
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-5008K/489155.com@KAVR-500.PART2_8K.asr.srt
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-5008K/489155.com@KAVR-500.PART2_8K.zh.srt
+
+[4/18] /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD1.mp4
+extract /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD1.mp4 -> /home/rmqlife/work/voice_understanding/data/vr/KAVR-506-伊藤舞雪__KAVR-506-CD1.wav
+subtitle /home/rmqlife/work/voice_understanding/data/vr/KAVR-506-伊藤舞雪__KAVR-506-CD1.wav
+gpu: stop Ollama before ASR
+gpu: wait for VRAM after ASR
+gpu: stop Ollama after polish (nsfw-local:27b)
+publish -> /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD1.asr.srt
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD1.zh.srt
+
+[5/18] /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD3.mp4
+extract /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD3.mp4 -> /home/rmqlife/work/voice_understanding/data/vr/KAVR-506-伊藤舞雪__KAVR-506-CD3.wav
+subtitle /home/rmqlife/work/voice_understanding/data/vr/KAVR-506-伊藤舞雪__KAVR-506-CD3.wav
+gpu: stop Ollama before ASR
+gpu: wait for VRAM after ASR
+gpu: stop Ollama after polish (nsfw-local:27b)
+publish -> /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD3.asr.srt
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD3.zh.srt
+
+[6/18] /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD4.mp4
+extract /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD4.mp4 -> /home/rmqlife/work/voice_understanding/data/vr/KAVR-506-伊藤舞雪__KAVR-506-CD4.wav
+subtitle /home/rmqlife/work/voice_understanding/data/vr/KAVR-506-伊藤舞雪__KAVR-506-CD4.wav
+gpu: stop Ollama before ASR
+gpu: wait for VRAM after ASR
+gpu: stop Ollama after polish (nsfw-local:27b)
+publish -> /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD4.asr.srt
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD4.zh.srt
+
+[7/18] /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD5.mp4
+skip existing wav /home/rmqlife/work/voice_understanding/data/vr/KAVR-506-伊藤舞雪__KAVR-506-CD5.wav
+subtitle /home/rmqlife/work/voice_understanding/data/vr/KAVR-506-伊藤舞雪__KAVR-506-CD5.wav
+gpu: stop Ollama before ASR
+gpu: wait for VRAM after ASR
+gpu: stop Ollama after polish (nsfw-local:27b)
+publish -> /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD5.asr.srt
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD5.zh.srt
+
+[8/18] /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD6.mp4
+extract /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD6.mp4 -> /home/rmqlife/work/voice_understanding/data/vr/KAVR-506-伊藤舞雪__KAVR-506-CD6.wav
+subtitle /home/rmqlife/work/voice_understanding/data/vr/KAVR-506-伊藤舞雪__KAVR-506-CD6.wav
+gpu: stop Ollama before ASR
+gpu: wait for VRAM after ASR
+gpu: stop Ollama after polish (nsfw-local:27b)
+publish -> /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD6.asr.srt
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD6.zh.srt
+
+[9/18] /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/MDVR-426-森日向子/MDVR-426-CD1.mp4
+extract /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/MDVR-426-森日向子/MDVR-426-CD1.mp4 -> /home/rmqlife/work/voice_understanding/data/vr/MDVR-426-森日向子__MDVR-426-CD1.wav
+subtitle /home/rmqlife/work/voice_understanding/data/vr/MDVR-426-森日向子__MDVR-426-CD1.wav
+gpu: stop Ollama before ASR
+gpu: wait for VRAM after ASR
+gpu: stop Ollama after polish (nsfw-local:27b)
+publish -> /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/MDVR-426-森日向子
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/MDVR-426-森日向子/MDVR-426-CD1.asr.srt
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/MDVR-426-森日向子/MDVR-426-CD1.zh.srt
+
+[10/18] /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/MDVR-426-森日向子/MDVR-426-CD2.mp4
+extract /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/MDVR-426-森日向子/MDVR-426-CD2.mp4 -> /home/rmqlife/work/voice_understanding/data/vr/MDVR-426-森日向子__MDVR-426-CD2.wav
+subtitle /home/rmqlife/work/voice_understanding/data/vr/MDVR-426-森日向子__MDVR-426-CD2.wav
+gpu: stop Ollama before ASR
+gpu: wait for VRAM after ASR
+gpu: stop Ollama after polish (nsfw-local:27b)
+publish -> /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/MDVR-426-森日向子
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/MDVR-426-森日向子/MDVR-426-CD2.asr.srt
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/MDVR-426-森日向子/MDVR-426-CD2.zh.srt
+
+[11/18] /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/SAVR-1080-#未知女优/SAVR-1080-CD1.mp4
+extract /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/SAVR-1080-#未知女优/SAVR-1080-CD1.mp4 -> /home/rmqlife/work/voice_understanding/data/vr/SAVR-1080-#未知女优__SAVR-1080-CD1.wav
+subtitle /home/rmqlife/work/voice_understanding/data/vr/SAVR-1080-#未知女优__SAVR-1080-CD1.wav
+gpu: stop Ollama before ASR
+gpu: wait for VRAM after ASR
+gpu: stop Ollama after polish (nsfw-local:27b)
+publish -> /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/SAVR-1080-#未知女优
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/SAVR-1080-#未知女优/SAVR-1080-CD1.asr.srt
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/SAVR-1080-#未知女优/SAVR-1080-CD1.zh.srt
+
+[12/18] /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/SAVR-1080-#未知女优/SAVR-1080-CD2.mp4
+extract /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/SAVR-1080-#未知女优/SAVR-1080-CD2.mp4 -> /home/rmqlife/work/voice_understanding/data/vr/SAVR-1080-#未知女优__SAVR-1080-CD2.wav
+subtitle /home/rmqlife/work/voice_understanding/data/vr/SAVR-1080-#未知女优__SAVR-1080-CD2.wav
+gpu: stop Ollama before ASR
+gpu: wait for VRAM after ASR
+gpu: stop Ollama after polish (nsfw-local:27b)
+publish -> /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/SAVR-1080-#未知女优
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/SAVR-1080-#未知女优/SAVR-1080-CD2.asr.srt
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/SAVR-1080-#未知女优/SAVR-1080-CD2.zh.srt
+
+[13/18] /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/SAVR-1112-葉月なぎさ/SAVR-1112-CD2.mp4
+extract /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/SAVR-1112-葉月なぎさ/SAVR-1112-CD2.mp4 -> /home/rmqlife/work/voice_understanding/data/vr/SAVR-1112-葉月なぎさ__SAVR-1112-CD2.wav
+subtitle /home/rmqlife/work/voice_understanding/data/vr/SAVR-1112-葉月なぎさ__SAVR-1112-CD2.wav
+gpu: stop Ollama before ASR
+gpu: wait for VRAM after ASR
+gpu: stop Ollama after polish (nsfw-local:27b)
+publish -> /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/SAVR-1112-葉月なぎさ
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/SAVR-1112-葉月なぎさ/SAVR-1112-CD2.asr.srt
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/SAVR-1112-葉月なぎさ/SAVR-1112-CD2.zh.srt
+
+[14/18] /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/SAVR-1112-葉月なぎさ/SAVR-1112-CD3.mp4
+extract /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/SAVR-1112-葉月なぎさ/SAVR-1112-CD3.mp4 -> /home/rmqlife/work/voice_understanding/data/vr/SAVR-1112-葉月なぎさ__SAVR-1112-CD3.wav
+subtitle /home/rmqlife/work/voice_understanding/data/vr/SAVR-1112-葉月なぎさ__SAVR-1112-CD3.wav
+gpu: stop Ollama before ASR
+gpu: wait for VRAM after ASR
+gpu: stop Ollama after polish (nsfw-local:27b)
+publish -> /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/SAVR-1112-葉月なぎさ
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/SAVR-1112-葉月なぎさ/SAVR-1112-CD3.asr.srt
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/SAVR-1112-葉月なぎさ/SAVR-1112-CD3.zh.srt
+
+[15/18] /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/VRKM-1828-逢沢みゆ/VRKM-1828-CD1.mp4
+extract /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/VRKM-1828-逢沢みゆ/VRKM-1828-CD1.mp4 -> /home/rmqlife/work/voice_understanding/data/vr/VRKM-1828-逢沢みゆ__VRKM-1828-CD1.wav
+subtitle /home/rmqlife/work/voice_understanding/data/vr/VRKM-1828-逢沢みゆ__VRKM-1828-CD1.wav
+gpu: stop Ollama before ASR
+gpu: wait for VRAM after ASR
+gpu: stop Ollama after polish (nsfw-local:27b)
+publish -> /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/VRKM-1828-逢沢みゆ
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/VRKM-1828-逢沢みゆ/VRKM-1828-CD1.asr.srt
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/VRKM-1828-逢沢みゆ/VRKM-1828-CD1.zh.srt
+
+[16/18] /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/VRKM-1828-逢沢みゆ/VRKM-1828-CD2.mp4
+extract /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/VRKM-1828-逢沢みゆ/VRKM-1828-CD2.mp4 -> /home/rmqlife/work/voice_understanding/data/vr/VRKM-1828-逢沢みゆ__VRKM-1828-CD2.wav
+subtitle /home/rmqlife/work/voice_understanding/data/vr/VRKM-1828-逢沢みゆ__VRKM-1828-CD2.wav
+gpu: stop Ollama before ASR
+gpu: wait for VRAM after ASR
+gpu: stop Ollama after polish (nsfw-local:27b)
+publish -> /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/VRKM-1828-逢沢みゆ
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/VRKM-1828-逢沢みゆ/VRKM-1828-CD2.asr.srt
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/VRKM-1828-逢沢みゆ/VRKM-1828-CD2.zh.srt
+
+[17/18] /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/VRKM-1850-沙月恵奈,月野かすみ/VRKM-1850-CD3.mp4
+extract /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/VRKM-1850-沙月恵奈,月野かすみ/VRKM-1850-CD3.mp4 -> /home/rmqlife/work/voice_understanding/data/vr/VRKM-1850-沙月恵奈_月野かすみ__VRKM-1850-CD3.wav
+subtitle /home/rmqlife/work/voice_understanding/data/vr/VRKM-1850-沙月恵奈_月野かすみ__VRKM-1850-CD3.wav
+gpu: stop Ollama before ASR
+gpu: wait for VRAM after ASR
+gpu: stop Ollama after polish (nsfw-local:27b)
+publish -> /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/VRKM-1850-沙月恵奈,月野かすみ
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/VRKM-1850-沙月恵奈,月野かすみ/VRKM-1850-CD3.asr.srt
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/VRKM-1850-沙月恵奈,月野かすみ/VRKM-1850-CD3.zh.srt
+
+[18/18] /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/VRKM-1850-沙月恵奈,月野かすみ/VRKM-1850-CD4.mp4
+extract /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/VRKM-1850-沙月恵奈,月野かすみ/VRKM-1850-CD4.mp4 -> /home/rmqlife/work/voice_understanding/data/vr/VRKM-1850-沙月恵奈_月野かすみ__VRKM-1850-CD4.wav
+subtitle /home/rmqlife/work/voice_understanding/data/vr/VRKM-1850-沙月恵奈_月野かすみ__VRKM-1850-CD4.wav
+gpu: stop Ollama before ASR
+gpu: wait for VRAM after ASR
+gpu: stop Ollama after polish (nsfw-local:27b)
+publish -> /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/VRKM-1850-沙月恵奈,月野かすみ
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/VRKM-1850-沙月恵奈,月野かすみ/VRKM-1850-CD4.asr.srt
+/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/VRKM-1850-沙月恵奈,月野かすみ/VRKM-1850-CD4.zh.srt
+
+finished 18 video(s)

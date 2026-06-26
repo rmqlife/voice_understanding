@@ -29,8 +29,8 @@ from sense_voice.segments import (  # noqa: E402
     segment_duration_stats,
 )
 
-DEFAULT_CLIP = ROOT / "test_voice_clips" / "sunflower.mp3"
-DEFAULT_CLIPS = ROOT / "test_voice_clips"
+DEFAULT_CLIP = ROOT / "data" / "recording" / "sunflower.mp3"
+DEFAULT_CLIPS = ROOT / "data" / "vr"
 DEFAULT_REPORT = BENCH_DIR / "reports" / "voice_llm_benchmark.md"
 DEFAULT_MODEL = "qwen3:1.7b"
 
@@ -45,7 +45,7 @@ def main() -> None:
         "--clips",
         type=Path,
         default=None,
-        help="Directory of audio files (default: test_voice_clips/)",
+        help="Directory of audio files (default: data/vr/)",
     )
     parser.add_argument(
         "--clip",

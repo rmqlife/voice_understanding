@@ -6,11 +6,28 @@ import json
 import re
 import subprocess
 import time
+import urllib.error
 import urllib.request
 from typing import Callable
 
 KANA_PATTERN = re.compile(r"[\u3040-\u30ff]")
 CHINESE_PATTERN = re.compile(r"[\u4e00-\u9fff]")
+AUDIO_EVENT_TAG_PATTERN = re.compile(
+    r"\[(?:停顿|短暂停顿|不可辨语音|不可辨语音/停顿|不可辨语音与喘息|背景音乐|呻吟|笑声|喘息|听不清|杂音|咳嗽|哼唧|喘息声|呻吟声)(?:[：:/][^\]]*)?\]"
+)
+META_COMMENTARY_PATTERN = re.compile(
+    r"(?:可能是.{0,16}(?:误识别|误识)|误识别|误识|结合上下文|结合语境|推测为|保留了语气|以通顺语义|标记为不可辨|仅识别到标点)"
+)
+TRANSLATE_BATCH_LINE_PATTERN = re.compile(r"^\s*-\s*\[(?P<index>\d+)\]\s*(?P<text>.*)\s*$")
+DEFAULT_TRANSLATE_RETRY_BATCH = 25
+INTERJECTION_CHARS = set("嗯啊呀哦呃哈呜诶唉哼喔额哎哇呐噢唉诶")
+ORPHAN_PARTICLE_CHARS = set("了的吗呢啊吧呀嘛着过")
+MOAN_FILLER_PATTERN = re.compile(
+    r"^[嗯啊呀哦呃哈呜诶唉哼喔额哎哇呐噢]+"
+    r"([，,、][嗯啊呀哦呃哈呜诶唉有是的了啊]*)?"
+    r"[。！？!?…~～.]*$"
+)
+PUNCT_ONLY_PATTERN = re.compile(r"^[。！？!?.,，…~～\s]+$")
 
 
 def stop_ollama_models(models: list[str]) -> None:
@@ -23,6 +40,30 @@ def stop_ollama_models(models: list[str]) -> None:
             check=False,
             timeout=30,
         )
+
+
+def list_running_ollama_models() -> list[str]:
+    try:
+        req = urllib.request.Request("http://127.0.0.1:11434/api/ps", method="GET")
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            body = json.loads(resp.read().decode("utf-8"))
+    except (OSError, json.JSONDecodeError, urllib.error.URLError):
+        return []
+    names: list[str] = []
+    for item in body.get("models", []):
+        if not isinstance(item, dict):
+            continue
+        name = str(item.get("name") or item.get("model") or "").strip()
+        if name:
+            names.append(name)
+    return names
+
+
+def stop_all_ollama_models(extra: list[str] | None = None) -> None:
+    """Stop every model Ollama currently has loaded, plus any named extras."""
+    names = set(list_running_ollama_models())
+    names.update(item for item in (extra or []) if item)
+    stop_ollama_models(sorted(names))
 
 
 def ollama_generate(model: str, prompt: str) -> tuple[str, float]:
@@ -45,6 +86,262 @@ def ollama_generate(model: str, prompt: str) -> tuple[str, float]:
         body = json.loads(resp.read().decode("utf-8"))
     elapsed = time.perf_counter() - start
     return body.get("response", "").strip(), elapsed
+
+
+def chunk_segments(
+    segments: list[dict[str, object]],
+    max_segments: int,
+) -> list[list[dict[str, object]]]:
+    """Split ASR segments into fixed-size batches for LLM polish calls."""
+    if max_segments <= 0:
+        raise ValueError("max_segments must be positive")
+    if not segments:
+        return []
+    return [
+        segments[index : index + max_segments]
+        for index in range(0, len(segments), max_segments)
+    ]
+
+
+def _segment_start(segment: dict[str, object]) -> float | None:
+    start = segment.get("start")
+    if start is None:
+        return None
+    try:
+        return float(start)
+    except (TypeError, ValueError):
+        return None
+
+
+def align_polished_texts_to_chunk(
+    parsed_entries: list[tuple[float, float, str]],
+    chunk_segments: list[dict[str, object]],
+) -> list[str]:
+    """Map parsed LLM timeline lines to chunk segments (timestamp-first when counts differ)."""
+    expected = len(chunk_segments)
+    if expected == 0:
+        return []
+    if not parsed_entries:
+        return [""] * expected
+
+    if len(parsed_entries) == expected:
+        return [entry[2].strip() for entry in parsed_entries]
+
+    pool = list(parsed_entries)
+    used = [False] * len(pool)
+    texts: list[str] = []
+    for segment in chunk_segments:
+        seg_start = _segment_start(segment)
+        best_idx: int | None = None
+        best_dist = float("inf")
+        if seg_start is not None:
+            for index, (parsed_start, _parsed_end, _parsed_text) in enumerate(pool):
+                if used[index]:
+                    continue
+                distance = abs(parsed_start - seg_start)
+                if distance < best_dist:
+                    best_dist = distance
+                    best_idx = index
+        if best_idx is not None and best_dist <= 3.0:
+            used[best_idx] = True
+            texts.append(pool[best_idx][2].strip())
+        else:
+            texts.append("")
+    return texts
+
+
+def extract_timeline_section(text: str) -> str:
+    """Keep only the body under `## Timeline`; ignore Notes and other sections."""
+    lines: list[str] = []
+    in_timeline = False
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("## "):
+            if stripped.lower().startswith("## timeline"):
+                in_timeline = True
+            elif in_timeline:
+                break
+            continue
+        if in_timeline:
+            lines.append(line)
+    if lines:
+        return "\n".join(lines)
+    return text
+
+
+def normalize_subtitle_punctuation(text: str) -> str:
+    text = re.sub(r"[。\.]{2,}", "。", text)
+    text = re.sub(r"[？\?]{2,}", "？", text)
+    text = re.sub(r"[！!]{2,}", "！", text)
+    text = re.sub(r"([？\?！!])[。\.]+", r"\1", text)
+    text = re.sub(r"[。\.]+([？\?！!])", r"\1", text)
+    return text.strip()
+
+
+def _chinese_core(text: str) -> str:
+    return re.sub(r"[^\u4e00-\u9fff]", "", text)
+
+
+def is_filler_subtitle(text: str) -> bool:
+    stripped = text.strip()
+    if not stripped or PUNCT_ONLY_PATTERN.fullmatch(stripped):
+        return True
+    core = _chinese_core(stripped)
+    if not core:
+        return True
+    if len(core) <= 2 and all(char in INTERJECTION_CHARS for char in core):
+        return True
+    if MOAN_FILLER_PATTERN.fullmatch(stripped):
+        return True
+    if len(core) == 1 and core in INTERJECTION_CHARS:
+        return True
+    return False
+
+
+def is_orphan_particle_line(text: str) -> bool:
+    core = _chinese_core(text)
+    return len(core) == 1 and core in ORPHAN_PARTICLE_CHARS
+
+
+def clean_polished_subtitle_text(text: str) -> str:
+    """Remove tags, filler moans, orphan particles; normalize punctuation."""
+    if is_meta_commentary(text):
+        return ""
+    cleaned = AUDIO_EVENT_TAG_PATTERN.sub("", text)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    if is_meta_commentary(cleaned):
+        return ""
+    cleaned = normalize_subtitle_punctuation(cleaned)
+    if is_filler_subtitle(cleaned) or is_orphan_particle_line(cleaned):
+        return ""
+    return cleaned
+
+
+def is_meta_commentary(text: str) -> bool:
+    return bool(META_COMMENTARY_PATTERN.search(text))
+
+
+def needs_chinese_translation(text: str) -> bool:
+    stripped = text.strip()
+    if not stripped:
+        return False
+    if is_meta_commentary(stripped):
+        return True
+    if not KANA_PATTERN.search(stripped):
+        return False
+    chinese_count = len(CHINESE_PATTERN.findall(stripped))
+    if chinese_count == 0:
+        return True
+    kana_count = len(KANA_PATTERN.findall(stripped))
+    return kana_count >= chinese_count
+
+
+def translate_segment_prompt(text: str) -> str:
+    return f"""/no_think
+将下面字幕文本翻译成自然中文。
+
+要求：
+- 只输出一句中文翻译，不要解释。
+- 不要保留日文假名或日文。
+- 不要加 [停顿]、[不可辨语音] 等括号标记。
+- 若原文只是呻吟或无意义声音，输出空行（什么都不写）。
+- 不要输出“嗯”“呀”“啊”等纯语气词单行。
+
+原文：
+{text}
+"""
+
+
+def translate_segments_batch_prompt(items: list[tuple[int, str]]) -> str:
+    body = "\n".join(f"- [{index}] {text}" for index, text in items)
+    return f"""/no_think
+将下面编号字幕逐条翻译成自然中文。
+
+要求：
+- 每条输入对应一条输出，编号必须一致。
+- 输出格式：`- [编号] 中文翻译`（无对白则 `- [编号]` 后留空）。
+- 只输出中文，不要解释，不要括号标记。
+
+原文：
+{body}
+"""
+
+
+def parse_translate_batch_output(output: str) -> dict[int, str]:
+    parsed: dict[int, str] = {}
+    for line in output.splitlines():
+        match = TRANSLATE_BATCH_LINE_PATTERN.match(line.strip())
+        if not match:
+            continue
+        parsed[int(match.group("index"))] = match.group("text").strip()
+    return parsed
+
+
+def polish_segment_texts(
+    model: str,
+    chunk_segments: list[dict[str, object]],
+    texts: list[str],
+    *,
+    retry_batch_size: int = DEFAULT_TRANSLATE_RETRY_BATCH,
+) -> tuple[list[str], float]:
+    """Clean LLM output and batch-retry segments that remain untranslated."""
+    cleaned = [clean_polished_subtitle_text(text) for text in texts]
+    retry_items: list[tuple[int, str]] = []
+    for index, (text, segment) in enumerate(zip(cleaned, chunk_segments, strict=False)):
+        origin = str(segment.get("text", "")).strip()
+        if not origin:
+            continue
+        if text and not needs_chinese_translation(text):
+            continue
+        retry_items.append((index, origin))
+
+    total_seconds = 0.0
+    for offset in range(0, len(retry_items), retry_batch_size):
+        batch = retry_items[offset : offset + retry_batch_size]
+        if len(batch) == 1:
+            index, origin = batch[0]
+            retry_output, seconds = ollama_generate(model, translate_segment_prompt(origin))
+            total_seconds += seconds
+            retry_text = clean_polished_subtitle_text(
+                retry_output.splitlines()[0] if retry_output else ""
+            )
+            if retry_text and not needs_chinese_translation(retry_text):
+                cleaned[index] = retry_text
+            continue
+
+        output, seconds = ollama_generate(model, translate_segments_batch_prompt(batch))
+        total_seconds += seconds
+        parsed = parse_translate_batch_output(output)
+        for index, _origin in batch:
+            retry_text = clean_polished_subtitle_text(parsed.get(index, ""))
+            if retry_text and not needs_chinese_translation(retry_text):
+                cleaned[index] = retry_text
+    return cleaned, total_seconds
+
+
+def generate_polished_texts_by_segment_chunks(
+    model: str,
+    segments: list[dict[str, object]],
+    profile: str,
+    *,
+    max_segments: int = 50,
+) -> tuple[list[str], float]:
+    """Polish/translate each segment batch; keep 1:1 alignment with origin segments."""
+    from .segments import format_timeline_compact
+    from .srt import parse_srt_entries
+
+    all_texts: list[str] = []
+    total_seconds = 0.0
+    for chunk in chunk_segments(segments, max_segments):
+        timeline = format_timeline_compact(chunk)
+        output, seconds = ollama_generate(model, polish_prompt(timeline, profile))
+        total_seconds += seconds
+        parsed = parse_srt_entries(extract_timeline_section(output))
+        aligned = align_polished_texts_to_chunk(parsed, chunk)
+        polished, retry_seconds = polish_segment_texts(model, chunk, aligned)
+        total_seconds += retry_seconds
+        all_texts.extend(polished)
+    return all_texts, total_seconds
 
 
 def chunk_text(text: str, max_chars: int) -> list[str]:
@@ -92,9 +389,14 @@ def polish_prompt(text: str, profile: str) -> str:
 - 保留时间线结构；每条输入必须对应一条输出，禁止合并、拆分或重排条目。
 - 只删除口癖、重复、明显识别噪声；不要改写语义，不要扩写。
 - 输出主体为中文；原文为外语时做直译式翻译，保持简短。
+- 每条输出必须全是中文，不要保留日文假名或英文（专名除外）。
 - 时间戳必须与输入完全一致，格式为 `- [开始-结束] 中文字幕文本`。
-- 呻吟/笑声/喘息/背景音乐/不可辨语音写进 text，例如“[喘息]”“[笑声]”。
-- 输出 Markdown：`## Timeline` + 时间线条目 + `## Notes`（仅 ASR 不确定点）。
+- 呻吟、笑声、喘息、背景音乐、不可辨语音等无对白片段：该条 text 留空，不要写 [停顿]、[不可辨语音] 等括号标记。
+- 不要把呻吟/语气词翻成字幕（如单独一行的“嗯”“呀”“啊”）；这类条目留空。
+- 不要输出孤立助词或残片（如单独一行的“了。”）。
+- 标点只用一次，不要重复句号或问号（不要“。。”、“？。”）。
+- 不要输出解释、注释、ASR 纠错说明或不确定性分析。
+- 输出 Markdown：仅 `## Timeline` + 时间线条目，不要 `## Notes`。
 
 ASR 时间线：
 {text}
@@ -109,14 +411,16 @@ ASR 时间线：
 - 只整理可从音频文本判断的信息，不要补写画面、人物关系或事实。
 - 删除重复口癖、卡顿和无意义识别噪声。
 - 输出主体必须是中文；如果原文是日文、英文或其他语言，请翻译成自然中文。
+- 每条输出必须全是中文，不要保留日文假名或英文（专名除外）。
 - 每个输入时间线条目都必须在输出中有对应条目；不能省略末尾片段。
-- 不要合并、拆分或重排时间线条目；输出条目数要尽量与输入一致，便于生成 SRT。
-- 如果识别结果是呻吟、笑声、喘息、背景音乐或不可辨语音，把描述写进 text，例如“[喘息]”“[笑声]”“[背景音乐]”“[不可辨语音]”。
+- 不要合并、拆分或重排时间线条目；输出条目数必须与输入完全一致。
+- 呻吟、笑声、喘息、背景音乐、不可辨语音等无对白片段：该条 text 留空，不要写 [停顿]、[不可辨语音] 等括号标记。
+- 不要把呻吟/语气词翻成字幕（如单独一行的“嗯”“呀”“啊”）；这类条目留空。
+- 不要输出孤立助词或残片（如单独一行的“了。”）。
+- 标点只用一次，不要重复句号或问号（不要“。。”、“？。”）。
 - 不要做道德评价，不要扩写情色描写。
-- 输出 Markdown，包含：
-  1. `## Timeline`
-  2. 时间线条目，格式必须为 `- [开始-结束] 中文字幕文本`（不要输出 lang/emotion/type 等 tags）
-  3. `## Notes`，只列出 ASR 不确定点和明显噪声。
+- 不要输出解释、注释、ASR 纠错说明或不确定性分析（例如“可能是…误识别”）。
+- 输出 Markdown：仅 `## Timeline` + 时间线条目，格式必须为 `- [开始-结束] 中文字幕文本`（不要输出 lang/emotion/type 等 tags），不要 `## Notes`。
 
 ASR 时间线（每行格式为 `[开始-结束] 原文`）：
 {text}

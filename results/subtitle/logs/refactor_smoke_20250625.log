@@ -1,0 +1,4 @@
+✨ [1mPixi task ([0m[32m[1mvr-subtitle-test[0m[1m): [0m[34m[1mpython scripts/vr_subtitle_test.py[0m [34m--clip data/test_voice_clips/vr_savr_799_sample.wav --asr-backend official --asr-device cuda:0 --language ja --profile vr --run-label refactor_smoke_20250625 --report reports/subtitle/metrics/refactor_smoke_20250625.md[0m[33m: (VR ASR metrics + ASR/ZH SRT export)[0m
+Processing data/test_voice_clips/vr_savr_799_sample.wav
+Wrote reports/subtitle/metrics/refactor_smoke_20250625.md
+Wrote reports/subtitle/metrics/refactor_smoke_20250625.json

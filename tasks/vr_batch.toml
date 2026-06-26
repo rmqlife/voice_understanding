@@ -1,0 +1,116 @@
+# Subtitle batch task — generated 2026-06-25T14:21:35Z
+label = "vr_batch"
+created = "2026-06-25T14:21:35Z"
+
+[defaults]
+language = "ja"
+profile = "vr"
+asr_backend = "official"
+asr_device = "cuda:0"
+asr_model = ""
+polish_model = "nsfw-local:27b"
+chunk_chars = 3000
+chunk_segments = 80
+llm_timeline = "compact"
+skip_existing = true
+skip_polish = false
+use_gpu_lock = true
+wav_dir = "data/vr"
+srt_dir = "results/srt"
+mount = false
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/BadoinkVR_Suki Sin_Slip_of_the_Tongue_8K_180_180x180_3dh.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/DSVR-2001-#未知女优/DSVR-2001-CD1.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/DSVR-2001-#未知女优/DSVR-2001-CD2.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/KAVR-5008K/489155.com@KAVR-500.PART2_8K.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/KAVR-5008K/489155.com@KAVR-500.PART3_8K.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD1.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD2.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD3.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD4.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD5.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/KAVR-506-伊藤舞雪/KAVR-506-CD6.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/MDVR-426-森日向子/MDVR-426-CD1.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/MDVR-426-森日向子/MDVR-426-CD2.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/SAVR-1080-#未知女优/SAVR-1080-CD1.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/SAVR-1080-#未知女优/SAVR-1080-CD2.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/SAVR-1112-葉月なぎさ/SAVR-1112-CD1.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/SAVR-1112-葉月なぎさ/SAVR-1112-CD2.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/SAVR-1112-葉月なぎさ/SAVR-1112-CD3.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/VRKM-1828-逢沢みゆ/VRKM-1828-CD1.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/VRKM-1828-逢沢みゆ/VRKM-1828-CD2.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/VRKM-1850-沙月恵奈,月野かすみ/VRKM-1850-CD1.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/VRKM-1850-沙月恵奈,月野かすみ/VRKM-1850-CD2.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/VRKM-1850-沙月恵奈,月野かすみ/VRKM-1850-CD3.mp4"
+enabled = true
+
+[[videos]]
+path = "/mnt/fnos/jav/#finished/VRKM-1850-沙月恵奈,月野かすみ/VRKM-1850-CD4.mp4"
+enabled = true

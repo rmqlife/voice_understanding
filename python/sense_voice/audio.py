@@ -7,6 +7,44 @@ import subprocess
 from pathlib import Path
 
 
+def extract_wav_from_media(
+    input_path: str | Path,
+    output_path: str | Path,
+    *,
+    sample_rate: int = 16000,
+    start: str | None = None,
+    duration: str | None = None,
+) -> Path:
+    """Extract 16 kHz mono WAV from a media file (reads from URL/NFS in place)."""
+    input_path = Path(input_path)
+    output_path = Path(output_path)
+    if not input_path.is_file():
+        raise FileNotFoundError(f"input not found: {input_path}")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    cmd = ["ffmpeg", "-y", "-loglevel", "error"]
+    if start:
+        cmd.extend(["-ss", start])
+    cmd.extend(["-i", str(input_path)])
+    if duration:
+        cmd.extend(["-t", duration])
+    cmd.extend(
+        [
+            "-vn",
+            "-map",
+            "0:a:0",
+            "-ar",
+            str(sample_rate),
+            "-ac",
+            "1",
+            "-c:a",
+            "pcm_s16le",
+            str(output_path),
+        ]
+    )
+    subprocess.run(cmd, check=True)
+    return output_path
+
+
 def extract_audio_segment(
     audio_path: str | Path,
     start: float,

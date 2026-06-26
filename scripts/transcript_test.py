@@ -41,7 +41,7 @@ from sense_voice.transcript import (  # noqa: E402
     write_transcript_md,
 )
 
-DEFAULT_OUTPUT_DIR = ROOT / "reports" / "transcript"
+DEFAULT_OUTPUT_DIR = ROOT / "results" / "transcript"
 
 
 def collect_clips(args: argparse.Namespace) -> list[Path]:

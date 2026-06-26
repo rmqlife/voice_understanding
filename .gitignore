@@ -4,15 +4,18 @@ SenseVoice.cpp/build/
 __pycache__/
 *.pyc
 .DS_Store
-# Local test audio — keep one benchmark clip in repo
-test_voice_clips/*
-!test_voice_clips/sunflower.mp3
+# Local audio under data/ — keep one small sample in repo
+data/vr/*
+!data/vr/.gitkeep
+data/recording/*
+!data/recording/sunflower.mp3
+data/.subtitle_gpu.lock
+**/Untitled
 *.mp3
-!test_voice_clips/sunflower.mp3
+!data/recording/sunflower.mp3
 *.wav
 *.aac
 fbank_lfr_cmvn_feature.json
 reference/
-mag/
 # Legacy vendored path (only on mac branch); ignore if present after checkout
 SenseVoice.cpp/

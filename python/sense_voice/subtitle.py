@@ -9,6 +9,7 @@ import unicodedata
 from pathlib import Path
 from typing import Any
 
+from .llm import clean_polished_subtitle_text
 from .srt import SrtEntry, parse_srt_entries, split_entries_for_display
 from .timestamps import TimestampGenerator, Word, match_sentence_timestamp
 
@@ -233,12 +234,47 @@ def build_zh_srt_entries(
     alignments = parse_llm_alignments(polished)
     if alignments:
         entries = build_entries_from_alignments(alignments, words)
+        timing_texts = [row["origin_part"] for row in alignments]
     else:
         entries = parse_srt_entries(polished)
         entries = realign_polished_entries(entries, origin_segments, words)
+        timing_texts = None
     return split_entries_for_display(
         entries,
         words,
+        timing_texts=timing_texts,
+        max_chars=max_chars,
+        max_duration=max_duration,
+    )
+
+
+def build_zh_srt_entries_from_texts(
+    polished_texts: list[str],
+    origin_segments: list[dict[str, Any]],
+    words: list[Word],
+    *,
+    max_chars: int = DEFAULT_MAX_SRT_CHARS,
+    max_duration: float = DEFAULT_MAX_SRT_DURATION,
+) -> list[SrtEntry]:
+    """Build Chinese SRT using origin segment timestamps and 1:1 translated text."""
+    entries: list[SrtEntry] = []
+    timing_texts: list[str] = []
+    for segment, zh_text in zip(origin_segments, polished_texts, strict=False):
+        start = segment.get("start")
+        end = segment.get("end")
+        text = clean_polished_subtitle_text(zh_text.strip())
+        if start is None or end is None or not text:
+            continue
+        start_f = float(start)
+        end_f = float(end)
+        if end_f <= start_f:
+            continue
+        entries.append((start_f, end_f, text))
+        timing_texts.append(str(segment.get("origin_text") or segment.get("text", "")).strip())
+    return split_entries_for_display(
+        entries,
+        words,
+        timing_texts=timing_texts,
         max_chars=max_chars,
         max_duration=max_duration,
     )

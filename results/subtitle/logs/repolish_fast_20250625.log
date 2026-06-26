@@ -1,0 +1,20 @@
+✨ [1mPixi task ([0m[32m[1mvr-subtitle-test[0m[1m): [0m[34m[1mpython scripts/vr_subtitle_test.py[0m [34m--repolish-only --repolish-asr --name-filter  --chunk-segments 80 --continue-on-error[0m[33m: (VR ASR metrics + ASR/ZH SRT export)[0m
+Repolishing DSVR-2001-#未知女优__DSVR-2001-CD1.asr.srt
+✨ [1mPixi task ([0m[32m[1mvr-subtitle-test[0m[1m): [0m[34m[1mpython scripts/vr_subtitle_test.py[0m [34m--repolish-only --repolish-asr --name-filter  --chunk-segments 80 --continue-on-error --publish[0m[33m: (VR ASR metrics + ASR/ZH SRT export)[0m
+Repolishing DSVR-2001-#未知女优__DSVR-2001-CD1.asr.srt
+failed DSVR-2001-#未知女优__DSVR-2001-CD1.asr.srt: name 'build_zh_srt_entries_from_texts' is not defined
+Repolishing DSVR-2001-#未知女优__DSVR-2001-CD2.asr.srt
+✨ [1mPixi task ([0m[32m[1mvr-subtitle-test[0m[1m): [0m[34m[1mpython scripts/vr_subtitle_test.py[0m [34m--repolish-only --repolish-asr --name-filter  --chunk-segments 80 --continue-on-error --publish[0m[33m: (VR ASR metrics + ASR/ZH SRT export)[0m
+Repolishing DSVR-2001-#未知女优__DSVR-2001-CD1.asr.srt
+publish -> /mnt/fnos/jav/#finished/DSVR-2001-#未知女优
+/mnt/fnos/jav/#finished/DSVR-2001-#未知女优/DSVR-2001-CD1.asr.srt
+/mnt/fnos/jav/#finished/DSVR-2001-#未知女优/DSVR-2001-CD1.zh.srt
+Repolishing DSVR-2001-#未知女优__DSVR-2001-CD2.asr.srt
+publish -> /mnt/fnos/jav/#finished/DSVR-2001-#未知女优
+/mnt/fnos/jav/#finished/DSVR-2001-#未知女优/DSVR-2001-CD2.asr.srt
+/mnt/fnos/jav/#finished/DSVR-2001-#未知女优/DSVR-2001-CD2.zh.srt
+Repolishing KAVR-5008K__489155.com@KAVR-500.PART2_8K.asr.srt
+publish -> /mnt/fnos/jav/#finished/KAVR-5008K
+/mnt/fnos/jav/#finished/KAVR-5008K/489155.com@KAVR-500.PART2_8K.asr.srt
+/mnt/fnos/jav/#finished/KAVR-5008K/489155.com@KAVR-500.PART2_8K.zh.srt
+Repolishing KAVR-5008K__489155.com@KAVR-500.PART3_8K.asr.srt

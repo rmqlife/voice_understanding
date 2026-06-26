@@ -1,26 +1,28 @@
 # TODO 索引
 
-仓库结构与产品线划分见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)，开发规范见 [`docs/RULE.md`](docs/RULE.md)。
+仓库结构与产品线划分见 [`.agent/ARCHITECTURE.md`](.agent/ARCHITECTURE.md)，开发规范见 [`.agent/RULE.md`](.agent/RULE.md)。
 
 ## 目录速览
 
 | 目录 | 内容 |
 |------|------|
+| `.agent/` | Agent 文档：架构、规范、分轨 TODO |
 | `python/sense_voice/` | 库：ASR、音频、LLM、diarize、SRT、transcript |
 | `scripts/` | CLI 入口（扁平，见 [`scripts/README.md`](scripts/README.md)） |
 | `benchmark/` | LLM benchmark 代码 + 数据 + 结论 |
-| `tests/` | 无 GPU 冒烟测试 |
-| `reports/` | 字幕 / 转写运行产物（从 mag 回传） |
-| `docs/` | 架构、规范、分轨 TODO |
+| `scripts/tests/` | 无 GPU 冒烟测试 |
+| `data/` | 本地音频（`vr` / `recording`） |
+| `results/` | 字幕 / 转写运行产物 |
+| `docs/` | 技术备忘（非 Agent 入口） |
 | `archive/` | 已归档实验（pyannote、mac/cpp、vad） |
 
 ## 分轨 TODO
 
 | 轨道 | 文件 | 用途 |
 |------|------|------|
-| **Core** | [`docs/TODO-core.md`](docs/TODO-core.md) | ASR、音频、LLM 公共底层 |
-| **Subtitle** | [`docs/TODO-subtitle.md`](docs/TODO-subtitle.md) | 字幕时间轴、SRT、翻译、显示切分 |
-| **Transcript** | [`docs/TODO-transcript.md`](docs/TODO-transcript.md) | 说话人转写、polish、电话/微信语音 |
+| **Core** | [`.agent/TODO-core.md`](.agent/TODO-core.md) | ASR、音频、LLM 公共底层 |
+| **Subtitle** | [`.agent/TODO-subtitle.md`](.agent/TODO-subtitle.md) | 字幕时间轴、SRT、翻译、显示切分 |
+| **Transcript** | [`.agent/TODO-transcript.md`](.agent/TODO-transcript.md) | 说话人转写、polish、电话/微信语音 |
 
 ## 快速判断改哪份 TODO
 
