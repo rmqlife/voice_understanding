@@ -1,5 +1,0 @@
-✨ [1mPixi task ([0m[32m[1mrun-subtitle-task[0m[1m): [0m[34m[1mpython scripts/run_subtitle_task.py[0m [34mtasks/vr_batch.toml --repolish-only --subtitle-only --continue-on-error[0m[33m: (Process mp4 paths from subtitle task.toml)[0m
-task: vr_batch (24 enabled videos)
-
-[1/24] /mnt/fnos/jav/#finished/BadoinkVR_Suki Sin_Slip_of_the_Tongue_8K_180_180x180_3dh.mp4
-extract /mnt/fnos/jav/#finished/BadoinkVR_Suki Sin_Slip_of_the_Tongue_8K_180_180x180_3dh.mp4 -> /home/rmqlife/work/voice_understanding/data/vr/BadoinkVR_Suki_Sin_Slip_of_the_Tongue_8K_180_180x180_3dh.wav

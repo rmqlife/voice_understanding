@@ -28,11 +28,11 @@ Mac 上请 `git checkout mac`；`main` 上的 cpp/Metal 辅助脚本已归档到
 | `.agent/` | Agent 文档：架构、规范、测试与分轨 TODO |
 | `python/sense_voice/` | 库：ASR、音频、LLM、SRT、字幕、转写 |
 | `scripts/` | 扁平 CLI 入口（见 [`scripts/README.md`](scripts/README.md)） |
-| `benchmark/` | LLM benchmark 代码 + 数据 + 结论 |
 | `scripts/tests/` | 无 GPU 冒烟测试 |
 | `tasks/` | 字幕批量任务 `*.toml`（`gen-subtitle-task` 生成） |
 | `data/` | 本地音频：`data/vr`（VR）、`data/recording`（录音/电话） |
-| `results/` | 字幕 / 转写运行产物（原 `reports/`） |
+| `results/` | 字幕 / 转写运行产物（**本地 only**，不进 Git） |
+| `benchmark/` | LLM benchmark 脚本与报告（**本地 only**，不进 Git） |
 | `docs/` | 技术备忘（`wav-to-srt.html` 等，非 Agent 入口） |
 | `archive/` | 已归档实验（pyannote / mac-cpp / vad） |
 

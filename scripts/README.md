@@ -21,7 +21,8 @@
 
 相关目录：
 
-- [`benchmark/`](../benchmark/) — LLM benchmark 代码 + 数据 + 结论（自成一体）
+- [`benchmark/`](../benchmark/) — LLM benchmark（本地 only，不进 Git）
+- [`results/`](../results/) — 运行产物 SRT / 指标 / 日志（本地 only，不进 Git）
 - [`scripts/tests/`](tests/) — 无 GPU 冒烟测试（`pixi run test` / `test-srt` / `test-transcript`）
 - [`data/`](../data/) — 本地音频：`data/vr`（VR）、`data/recording`（录音/电话）
 - [`archive/`](../archive/) — 已归档的实验代码与报告（pyannote、mac/cpp、vad 等）

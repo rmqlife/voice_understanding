@@ -1,7 +1,0 @@
-repolish batch: 26 clip(s)
-
-[1/26] DSVR-2001-#未知女优__DSVR-2001-CD1.wav
-gpu: stop Ollama after polish (nsfw-local:27b)
-{'clip': 'DSVR-2001-#未知女优__DSVR-2001-CD1.wav', 'audio_seconds': 0.0, 'asr_seconds': 0.0, 'asr_rtf': 0.0, 'raw_segments': 117, 'segments': 117, 'timing_source': 'asr_srt', 'duration_p50': 0.0, 'duration_p95': 0.0, 'duration_max': 0.0, 'duration_over_10s': 0, 'duration_over_30s': 0, 'polish_seconds': 174.32333856199875, 'chunks': 3, 'asr_srt_rel': 'results/srt/DSVR-2001-#未知女优__DSVR-2001-CD1.asr.srt', 'zh_srt_rel': 'results/srt/DSVR-2001-#未知女优__DSVR-2001-CD1.zh.srt', 'asr_srt_entries': 117, 'zh_srt_entries': 124, 'timing_confidence': 'n/a', 'stderr': '', 'polished_preview': ''}
-
-[2/26] DSVR-2001-#未知女优__DSVR-2001-CD2.wav

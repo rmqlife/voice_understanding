@@ -43,8 +43,10 @@ git push origin main
 | `data/recording/*` | 录音样例（仅 `sunflower.mp3` 可跟踪） |
 | `models/`、`.pixi/` | 模型权重、pixi 环境 |
 | `*.wav`、`*.aac`、大部分 `*.mp3` | 大媒体文件 |
+| `results/` | 字幕 / 转写运行产物（SRT、指标、日志） |
+| `benchmark/` | LLM benchmark 脚本与报告 |
 
-`results/` 里部分历史报告已归档进仓库；**新跑的大体积产物默认不要 commit**，除非用户明确要求留存某次指标或 SRT。
+`results/`、`benchmark/` 整目录不进 Git；产物留在本机，多机用 `sync-results-from-mag` 或各自本地跑。
 
 ## pull 时有本地未提交改动
 

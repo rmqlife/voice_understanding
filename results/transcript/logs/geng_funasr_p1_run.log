@@ -1,106 +1,0 @@
-✨ Pixi task (transcript-test): python scripts/transcript_test.py --clip test_voice_clips/微信录音 耿瑞香_20250326090128_45748064860651968.aac --diarize-method funasr --output-suffix _funasr_p1 --asr-backend official --asr-device cuda:0 --language zh --skip-polish --run-label geng_funasr_p1 --report reports/transcript/geng_funasr_p1_metrics.md: (Speaker diarization + transcript md/json export)
-Processing test_voice_clips/微信录音 耿瑞香_20250326090128_45748064860651968.aac
-WARNING:root:trust_remote_code: False
-WARNING:root:trust_remote_code: False
-WARNING:root:trust_remote_code: False
-WARNING:root:trust_remote_code: False
-funasr version: 1.3.13.
-Downloading Model from https://www.modelscope.cn to directory: /home/rmqlife/.cache/modelscope/hub/models/iic/speech_seaco_paraformer_large_asr_nat-zh-cn-16k-common-vocab8404-pytorch
-Downloading Model from https://www.modelscope.cn to directory: /home/rmqlife/.cache/modelscope/hub/models/iic/speech_fsmn_vad_zh-cn-16k-common-pytorch
-Downloading Model from https://www.modelscope.cn to directory: /home/rmqlife/.cache/modelscope/hub/models/iic/punc_ct-transformer_zh-cn-common-vocab272727-pytorch
-Downloading Model from https://www.modelscope.cn to directory: /home/rmqlife/.cache/modelscope/hub/models/iic/speech_campplus_sv_zh-cn_16k-common
-  0%|[34m          [0m| 0/1 [00:00<?, ?it/s]100%|[34m██████████[0m| 1/1 [00:00<00:00,  2.13it/s]{'load_data': '0.207', 'extract_feat': '0.231', 'forward': '0.470', 'batch_size': '1', 'rtf': '0.021'}, : 100%|[34m██████████[0m| 1/1 [00:00<00:00,  2.13it/s]rtf_avg: 0.021: 100%|[34m██████████[0m| 1/1 [00:00<00:00,  2.13it/s]                                                                                          rtf_avg: 0.021: 100%|[34m██████████[0m| 1/1 [00:00<00:00,  2.12it/s]
-  0%|[31m          [0m| 0/1 [00:00<?, ?it/s]
-  0%|[34m          [0m| 0/20 [00:00<?, ?it/s][A
-100%|[34m██████████[0m| 20/20 [00:01<00:00, 17.20it/s][A
-{'load_data': '0.000', 'extract_feat': '0.024', 'forward': '1.163', 'batch_size': '20', 'rtf': '0.009'}, : 100%|[34m██████████[0m| 20/20 [00:01<00:00, 17.20it/s][A
-rtf_avg: 0.009: 100%|[34m██████████[0m| 20/20 [00:01<00:00, 17.20it/s]                                                                                           [Artf_avg: 0.009: 100%|[34m██████████[0m| 20/20 [00:01<00:00, 16.56it/s]
-
-  0%|[34m          [0m| 0/1 [00:00<?, ?it/s][A
-{'load_data': '0.000', 'extract_feat': '0.001', 'forward': '0.066', 'batch_size': '1', 'rtf': '0.044'}, : 100%|[34m██████████[0m| 1/1 [00:00<00:00, 15.24it/s][A
-rtf_avg: 0.044: 100%|[34m██████████[0m| 1/1 [00:00<00:00, 15.21it/s]                                                                                          [Artf_avg: 0.044: 100%|[34m██████████[0m| 1/1 [00:00<00:00, 15.10it/s]
-
-  0%|[34m          [0m| 0/1 [00:00<?, ?it/s][A
-{'load_data': '0.000', 'extract_feat': '0.001', 'forward': '0.011', 'batch_size': '1', 'rtf': '0.007'}, : 100%|[34m██████████[0m| 1/1 [00:00<00:00, 93.66it/s][A
-rtf_avg: 0.007: 100%|[34m██████████[0m| 1/1 [00:00<00:00, 92.96it/s]                                                                                          [Artf_avg: 0.007: 100%|[34m██████████[0m| 1/1 [00:00<00:00, 91.08it/s]
-
-  0%|[34m          [0m| 0/1 [00:00<?, ?it/s][A
-{'load_data': '0.000', 'extract_feat': '0.001', 'forward': '0.010', 'batch_size': '1', 'rtf': '0.007'}, : 100%|[34m██████████[0m| 1/1 [00:00<00:00, 96.80it/s][A
-rtf_avg: 0.007: 100%|[34m██████████[0m| 1/1 [00:00<00:00, 96.13it/s]                                                                                          [Artf_avg: 0.007: 100%|[34m██████████[0m| 1/1 [00:00<00:00, 94.25it/s]
-
-  0%|[34m          [0m| 0/1 [00:00<?, ?it/s][A
-{'load_data': '0.000', 'extract_feat': '0.001', 'forward': '0.011', 'batch_size': '1', 'rtf': '0.007'}, : 100%|[34m██████████[0m| 1/1 [00:00<00:00, 94.84it/s][A
-rtf_avg: 0.007: 100%|[34m██████████[0m| 1/1 [00:00<00:00, 94.26it/s]                                                                                          [Artf_avg: 0.007: 100%|[34m██████████[0m| 1/1 [00:00<00:00, 92.59it/s]
-
-  0%|[34m          [0m| 0/1 [00:00<?, ?it/s][A
-{'load_data': '0.000', 'extract_feat': '0.001', 'forward': '0.010', 'batch_size': '1', 'rtf': '0.007'}, : 100%|[34m██████████[0m| 1/1 [00:00<00:00, 97.89it/s][A
-rtf_avg: 0.007: 100%|[34m██████████[0m| 1/1 [00:00<00:00, 97.30it/s]                                                                                          [Artf_avg: 0.007: 100%|[34m██████████[0m| 1/1 [00:00<00:00, 95.67it/s]
-
-  0%|[34m          [0m| 0/2 [00:00<?, ?it/s][A
-{'load_data': '0.000', 'extract_feat': '0.001', 'forward': '0.050', 'batch_size': '1', 'rtf': '0.017'}, : 100%|[34m██████████[0m| 2/2 [00:00<00:00, 40.35it/s][A
-rtf_avg: 0.017: 100%|[34m██████████[0m| 2/2 [00:00<00:00, 40.29it/s]                                                                                          [Artf_avg: 0.017: 100%|[34m██████████[0m| 2/2 [00:00<00:00, 40.11it/s]
-
-  0%|[34m          [0m| 0/2 [00:00<?, ?it/s][A
-{'load_data': '0.000', 'extract_feat': '0.001', 'forward': '0.011', 'batch_size': '1', 'rtf': '0.004'}, : 100%|[34m██████████[0m| 2/2 [00:00<00:00, 182.86it/s][A
-rtf_avg: 0.004: 100%|[34m██████████[0m| 2/2 [00:00<00:00, 181.78it/s]                                                                                          [Artf_avg: 0.004: 100%|[34m██████████[0m| 2/2 [00:00<00:00, 178.73it/s]
-
-  0%|[34m          [0m| 0/2 [00:00<?, ?it/s][A
-{'load_data': '0.000', 'extract_feat': '0.001', 'forward': '0.011', 'batch_size': '1', 'rtf': '0.004'}, : 100%|[34m██████████[0m| 2/2 [00:00<00:00, 188.94it/s][A
-rtf_avg: 0.004: 100%|[34m██████████[0m| 2/2 [00:00<00:00, 187.86it/s]                                                                                          [Artf_avg: 0.004: 100%|[34m██████████[0m| 2/2 [00:00<00:00, 184.89it/s]
-
-  0%|[34m          [0m| 0/3 [00:00<?, ?it/s][A
-{'load_data': '0.000', 'extract_feat': '0.001', 'forward': '0.048', 'batch_size': '1', 'rtf': '0.011'}, : 100%|[34m██████████[0m| 3/3 [00:00<00:00, 62.19it/s][A
-rtf_avg: 0.011: 100%|[34m██████████[0m| 3/3 [00:00<00:00, 62.08it/s]                                                                                          [Artf_avg: 0.011: 100%|[34m██████████[0m| 3/3 [00:00<00:00, 61.83it/s]
-
-  0%|[34m          [0m| 0/3 [00:00<?, ?it/s][A
-{'load_data': '0.000', 'extract_feat': '0.001', 'forward': '0.011', 'batch_size': '1', 'rtf': '0.003'}, : 100%|[34m██████████[0m| 3/3 [00:00<00:00, 263.22it/s][A
-rtf_avg: 0.003: 100%|[34m██████████[0m| 3/3 [00:00<00:00, 261.77it/s]                                                                                          [Artf_avg: 0.003: 100%|[34m██████████[0m| 3/3 [00:00<00:00, 257.76it/s]
-
-  0%|[34m          [0m| 0/3 [00:00<?, ?it/s][A
-{'load_data': '0.000', 'extract_feat': '0.001', 'forward': '0.011', 'batch_size': '1', 'rtf': '0.002'}, : 100%|[34m██████████[0m| 3/3 [00:00<00:00, 268.61it/s][A
-rtf_avg: 0.002: 100%|[34m██████████[0m| 3/3 [00:00<00:00, 267.14it/s]                                                                                          [Artf_avg: 0.002: 100%|[34m██████████[0m| 3/3 [00:00<00:00, 263.19it/s]
-
-  0%|[34m          [0m| 0/4 [00:00<?, ?it/s][A
-{'load_data': '0.000', 'extract_feat': '0.002', 'forward': '0.049', 'batch_size': '1', 'rtf': '0.008'}, : 100%|[34m██████████[0m| 4/4 [00:00<00:00, 81.57it/s][A
-rtf_avg: 0.008: 100%|[34m██████████[0m| 4/4 [00:00<00:00, 81.42it/s]                                                                                          [Artf_avg: 0.008: 100%|[34m██████████[0m| 4/4 [00:00<00:00, 81.09it/s]
-
-  0%|[34m          [0m| 0/6 [00:00<?, ?it/s][A
-{'load_data': '0.000', 'extract_feat': '0.003', 'forward': '0.050', 'batch_size': '1', 'rtf': '0.006'}, : 100%|[34m██████████[0m| 6/6 [00:00<00:00, 119.47it/s][A
-rtf_avg: 0.006: 100%|[34m██████████[0m| 6/6 [00:00<00:00, 119.28it/s]                                                                                          [Artf_avg: 0.006: 100%|[34m██████████[0m| 6/6 [00:00<00:00, 118.19it/s]
-
-  0%|[34m          [0m| 0/6 [00:00<?, ?it/s][A
-{'load_data': '0.000', 'extract_feat': '0.003', 'forward': '0.012', 'batch_size': '1', 'rtf': '0.001'}, : 100%|[34m██████████[0m| 6/6 [00:00<00:00, 478.99it/s][A
-rtf_avg: 0.001: 100%|[34m██████████[0m| 6/6 [00:00<00:00, 476.17it/s]                                                                                          [Artf_avg: 0.001: 100%|[34m██████████[0m| 6/6 [00:00<00:00, 460.27it/s]
-
-  0%|[34m          [0m| 0/6 [00:00<?, ?it/s][A
-{'load_data': '0.000', 'extract_feat': '0.002', 'forward': '0.012', 'batch_size': '1', 'rtf': '0.001'}, : 100%|[34m██████████[0m| 6/6 [00:00<00:00, 488.35it/s][A
-rtf_avg: 0.001: 100%|[34m██████████[0m| 6/6 [00:00<00:00, 485.80it/s]                                                                                          [Artf_avg: 0.001: 100%|[34m██████████[0m| 6/6 [00:00<00:00, 469.21it/s]
-
-  0%|[34m          [0m| 0/7 [00:00<?, ?it/s][A
-{'load_data': '0.000', 'extract_feat': '0.003', 'forward': '0.052', 'batch_size': '1', 'rtf': '0.005'}, : 100%|[34m██████████[0m| 7/7 [00:00<00:00, 135.50it/s][A
-rtf_avg: 0.005: 100%|[34m██████████[0m| 7/7 [00:00<00:00, 135.26it/s]                                                                                          [Artf_avg: 0.005: 100%|[34m██████████[0m| 7/7 [00:00<00:00, 133.92it/s]
-
-  0%|[34m          [0m| 0/9 [00:00<?, ?it/s][A
-{'load_data': '0.000', 'extract_feat': '0.004', 'forward': '0.053', 'batch_size': '1', 'rtf': '0.004'}, : 100%|[34m██████████[0m| 9/9 [00:00<00:00, 170.86it/s][A
-rtf_avg: 0.004: 100%|[34m██████████[0m| 9/9 [00:00<00:00, 170.63it/s]                                                                                          [Artf_avg: 0.004: 100%|[34m██████████[0m| 9/9 [00:00<00:00, 168.02it/s]
-
-  0%|[34m          [0m| 0/13 [00:00<?, ?it/s][A
-{'load_data': '0.000', 'extract_feat': '0.005', 'forward': '0.054', 'batch_size': '1', 'rtf': '0.003'}, : 100%|[34m██████████[0m| 13/13 [00:00<00:00, 241.63it/s][A
-rtf_avg: 0.003: 100%|[34m██████████[0m| 13/13 [00:00<00:00, 241.25it/s]                                                                                          [Artf_avg: 0.003: 100%|[34m██████████[0m| 13/13 [00:00<00:00, 237.01it/s]
-
-  0%|[34m          [0m| 0/17 [00:00<?, ?it/s][A
-{'load_data': '0.000', 'extract_feat': '0.007', 'forward': '0.055', 'batch_size': '1', 'rtf': '0.002'}, : 100%|[34m██████████[0m| 17/17 [00:00<00:00, 307.10it/s][A
-rtf_avg: 0.002: 100%|[34m██████████[0m| 17/17 [00:00<00:00, 306.59it/s]                                                                                          [Artf_avg: 0.002: 100%|[34m██████████[0m| 17/17 [00:00<00:00, 299.00it/s]
-
-  0%|[34m          [0m| 0/80 [00:00<?, ?it/s][A
-{'load_data': '0.000', 'extract_feat': '0.028', 'forward': '0.078', 'batch_size': '1', 'rtf': '0.001'}, : 100%|[34m██████████[0m| 80/80 [00:00<00:00, 1026.33it/s][A
-rtf_avg: 0.001: 100%|[34m██████████[0m| 80/80 [00:00<00:00, 1025.07it/s]                                                                                          [Artf_avg: 0.001: 100%|[34m██████████[0m| 80/80 [00:00<00:00, 959.79it/s] 
-
-  0%|[34m          [0m| 0/1 [00:00<?, ?it/s][A
-{'load_data': 0.0, 'extract_feat': 0.0, 'forward': '0.093', 'batch_size': '1', 'rtf': '-0.093'}, : 100%|[34m██████████[0m| 1/1 [00:00<00:00, 10.72it/s][A
-rtf_avg: -0.093: 100%|[34m██████████[0m| 1/1 [00:00<00:00, 10.72it/s]                                                                                  [Artf_avg: -0.093: 100%|[34m██████████[0m| 1/1 [00:00<00:00, 10.70it/s]
-100%|[31m██████████[0m| 1/1 [00:02<00:00,  2.12s/it]rtf_avg: 0.015, time_speech:  142.272, time_escape: 2.085: 100%|[31m██████████[0m| 1/1 [00:02<00:00,  2.12s/it]rtf_avg: 0.015, time_speech:  142.272, time_escape: 2.085: 100%|[31m██████████[0m| 1/1 [00:02<00:00,  2.12s/it]
-Wrote reports/transcript/geng_funasr_p1_metrics.md
-Wrote reports/transcript/geng_funasr_p1_metrics.json
-Wrote reports/transcript/微信录音 耿瑞香_20250326090128_45748064860651968__funasr_p1.md
-Wrote reports/transcript/微信录音 耿瑞香_20250326090128_45748064860651968__funasr_p1.json

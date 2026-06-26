@@ -93,10 +93,10 @@
 ```
 python/sense_voice/   库：所有共享逻辑
 scripts/              扁平 CLI 入口（见 scripts/README.md）
-benchmark/            LLM benchmark 代码 + 数据 + 结论
 scripts/tests/        无 GPU 冒烟测试
 data/                 本地音频（data/vr、data/recording）
-results/              字幕 / 转写运行产物
+results/              字幕 / 转写运行产物（本地 only，不进 Git）
+benchmark/            LLM benchmark 脚本与报告（本地 only，不进 Git）
 .agent/               架构、规范、分轨 TODO（Agent 文档）
 docs/                 技术备忘（非 Agent 入口）
 archive/              已归档实验（pyannote / mac-cpp / vad）

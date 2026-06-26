@@ -1,4 +1,0 @@
-✨ Pixi task (vr-subtitle-test): python scripts/vr_subtitle_test.py --clip test_voice_clips/微信录音 耿瑞香_20250326090128_45748064860651968.aac --report reports/geng_ruixiang_zh_p2_subtitle_metrics.md --run-label geng_ruixiang_zh_p2 --asr-backend official --asr-device cuda:0 --language zh --skip-polish: (VR ASR metrics + ASR/ZH SRT export)
-Processing test_voice_clips/微信录音 耿瑞香_20250326090128_45748064860651968.aac
-Wrote reports/geng_ruixiang_zh_p2_subtitle_metrics.md
-Wrote reports/geng_ruixiang_zh_p2_subtitle_metrics.json

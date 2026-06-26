@@ -9,10 +9,10 @@
 | `.agent/` | Agent 文档：架构、规范、分轨 TODO |
 | `python/sense_voice/` | 库：ASR、音频、LLM、diarize、SRT、transcript |
 | `scripts/` | CLI 入口（扁平，见 [`scripts/README.md`](scripts/README.md)） |
-| `benchmark/` | LLM benchmark 代码 + 数据 + 结论 |
 | `scripts/tests/` | 无 GPU 冒烟测试 |
 | `data/` | 本地音频（`vr` / `recording`） |
-| `results/` | 字幕 / 转写运行产物 |
+| `results/` | 字幕 / 转写运行产物（本地 only，不进 Git） |
+| `benchmark/` | LLM benchmark 脚本与报告（本地 only，不进 Git） |
 | `docs/` | 技术备忘（非 Agent 入口） |
 | `archive/` | 已归档实验（pyannote、mac/cpp、vad） |
 

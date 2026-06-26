@@ -1,6 +1,0 @@
-✨ [1mPixi task ([0m[32m[1madd-subtitle[0m[1m): [0m[34m[1mpython scripts/add_subtitle.py[0m [34m--video /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-5008K/489155.com@KAVR-500.PART3_8K.mp4 --language ja --profile vr --asr-backend official --asr-device cuda:0 --polish-model nsfw-local:27b[0m[33m: (NFS VR mp4 → WAV → SRT → copy back to NFS)[0m
-extract /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-5008K/489155.com@KAVR-500.PART3_8K.mp4 -> /home/rmqlife/work/voice_understanding/data/vr/KAVR-5008K__489155.com@KAVR-500.PART3_8K.wav
-subtitle /home/rmqlife/work/voice_understanding/data/vr/KAVR-5008K__489155.com@KAVR-500.PART3_8K.wav
-publish -> /run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-5008K
-/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-5008K/489155.com@KAVR-500.PART3_8K.asr.srt
-/run/user/1000/gvfs/smb-share:server=atop-nuc-fnos.local,share=jav/#finished/KAVR-5008K/489155.com@KAVR-500.PART3_8K.zh.srt
