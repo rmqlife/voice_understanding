@@ -8,13 +8,13 @@ import sys
 import traceback
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "python"))
-sys.path.insert(0, str(ROOT / "scripts"))
+from _paths import PROJECT_ROOT, add_main_paths
 
+add_main_paths()
+
+from add_subtitle import add_subtitle_for_video  # noqa: E402
 from sense_voice.subtitle_task import load_subtitle_task, print_task_summary  # noqa: E402
 from sense_voice.vr_sources import finished_dir, resolve_finished_video, resolve_jav_root  # noqa: E402
-from add_subtitle import add_subtitle_for_video  # noqa: E402
 
 
 def main() -> None:
@@ -27,22 +27,27 @@ def main() -> None:
     parser.add_argument("--publish-only", action="store_true")
     parser.add_argument("--repolish-only", action="store_true", help="Re-run LLM from existing .asr.srt")
     parser.add_argument("--continue-on-error", action="store_true")
-    parser.add_argument("--log", type=Path, default=None, help="Append stdout/stderr to log file")
     args = parser.parse_args()
 
     if not args.task.is_file():
         raise SystemExit(f"task file not found: {args.task}")
 
-    task = load_subtitle_task(args.task, repo_root=ROOT)
+    task = load_subtitle_task(args.task, repo_root=PROJECT_ROOT)
     enabled = task.enabled_videos()
+    if not enabled:
+        raise SystemExit("task has no enabled videos")
     if args.from_index < 1 or args.from_index > len(enabled):
         raise SystemExit(f"--from must be between 1 and {len(enabled)}")
 
     defaults = task.defaults
-    jav_root = resolve_jav_root(mount=defaults.mount)
-    finished = finished_dir(jav_root=jav_root)
-    wav_dir = (ROOT / defaults.wav_dir).resolve()
-    srt_dir = (ROOT / defaults.srt_dir).resolve()
+    if defaults.finished_root:
+        finished = Path(defaults.finished_root).expanduser().resolve()
+        if not finished.is_dir():
+            raise SystemExit(f"finished root not found: {finished}")
+    else:
+        finished = finished_dir(jav_root=resolve_jav_root(mount=defaults.mount))
+    wav_dir = (PROJECT_ROOT / defaults.wav_dir).resolve()
+    srt_dir = (PROJECT_ROOT / defaults.srt_dir).resolve()
 
     print(f"task: {task.label} ({len(enabled)} enabled videos)", flush=True)
     if args.dry_run:
@@ -71,8 +76,8 @@ def main() -> None:
                 finished_root=finished,
                 wav_dir=wav_dir,
                 srt_dir=srt_dir,
-                mount=defaults.mount,
                 skip_existing=False if args.repolish_only else defaults.skip_existing,
+                force=False,
                 extract_only=args.extract_only,
                 subtitle_only=args.subtitle_only,
                 publish_only=args.publish_only,
@@ -83,6 +88,7 @@ def main() -> None:
                 asr_backend=defaults.asr_backend,
                 asr_device=defaults.asr_device,
                 asr_model=defaults.asr_model,
+                asr_chunk_seconds=defaults.asr_chunk_seconds,
                 polish_model=defaults.polish_model,
                 chunk_chars=defaults.chunk_chars,
                 chunk_segments_size=defaults.chunk_segments,
@@ -107,4 +113,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
