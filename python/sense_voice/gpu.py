@@ -136,7 +136,7 @@ def subtitle_pipeline_lock(
         except BlockingIOError as exc:
             raise RuntimeError(
                 f"Another subtitle pipeline holds the GPU lock ({path}). "
-                "Stop the other add-subtitle / vr-subtitle-test process first."
+                "Stop the other add-subtitle / subtitle-pipeline process first."
             ) from exc
         handle.write(f"{os.getpid()}\n")
         handle.flush()

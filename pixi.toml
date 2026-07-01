@@ -1,36 +1,25 @@
 [workspace]
-name = "sense-voice"
+name = "vr-subtitle"
 version = "0.1.0"
-description = "SenseVoice voice understanding: FunASR official backend (main); Mac cpp on mac branch"
+description = "VR mp4 to ASR and Chinese SRT pipeline"
 channels = ["conda-forge"]
-platforms = ["osx-arm64", "linux-64"]
+platforms = ["linux-64"]
 
 [dependencies]
 python = "3.10.*"
 pip = "*"
-huggingface_hub = ">=0.20"
 ffmpeg = "*"
+tomli = "*"
+huggingface_hub = ">=0.20"
 
 [tasks]
-# Core ASR
-sv = { cmd = "python scripts/sv.py", description = "Transcribe audio file to text" }
-extract-audio = { cmd = "python scripts/extract_audio.py", description = "Extract 16 kHz mono WAV from media files" }
-install-gpu = { cmd = "python -m pip install --upgrade pip && python -m pip install torch==2.3.0+cu121 torchaudio==2.3.0+cu121 --index-url https://download.pytorch.org/whl/cu121 && python -m pip install -i https://mirrors.aliyun.com/pypi/simple --trusted-host mirrors.aliyun.com modelscope huggingface 'huggingface_hub<1.0' 'funasr>=1.1.3' 'numpy<=1.26.4' 'transformers<5'", description = "Install official SenseVoice/FunASR CUDA dependencies" }
-
-# Subtitle line
-vr-subtitle-test = { cmd = "python scripts/vr_subtitle_test.py", description = "VR ASR metrics + ASR/ZH SRT export" }
-add-subtitle = { cmd = "python scripts/add_subtitle.py", description = "NFS VR mp4 → WAV → SRT → copy back to NFS" }
-gen-subtitle-task = { cmd = "python scripts/gen_subtitle_task.py", description = "Generate subtitle task.toml from mp4 list" }
-run-subtitle-task = { cmd = "python scripts/run_subtitle_task.py", description = "Process mp4 paths from subtitle task.toml" }
-publish-vr-srt = { cmd = "python scripts/publish_vr_srt.py", description = "Copy SRT next to NFS/gvfs VR video (same stem as mp4)" }
-
-# Transcript line
-transcript-test = { cmd = "python scripts/transcript_test.py", description = "Speaker diarization + transcript md/json export" }
-download-transcript-models = { cmd = "python scripts/download_transcript_models.py", description = "Pre-download FunASR models for transcript" }
-
-# No-GPU smoke tests
-test = { cmd = "python scripts/tests/test_transcribe.py", description = "Run sample transcription" }
-test-srt = { cmd = "python scripts/tests/test_srt_smoke.py", description = "Smoke tests for SRT split and timestamps (no GPU)" }
-test-transcript = { cmd = "python scripts/tests/test_transcript_smoke.py", description = "Smoke tests for transcript assembly (no GPU)" }
-test-vr-sources = { cmd = "python scripts/tests/test_vr_sources.py", description = "Smoke tests for VR NFS path helpers (no GPU)" }
-test-subtitle-task = { cmd = "python scripts/tests/test_subtitle_task.py", description = "Smoke tests for subtitle task.toml (no GPU)" }
+web = { cmd = "python app.py", description = "Run the local VR subtitle web app" }
+install-gpu = { cmd = "python -m pip install --upgrade pip && python -m pip install torch==2.3.0+cu121 torchaudio==2.3.0+cu121 --index-url https://download.pytorch.org/whl/cu121 && python -m pip install -i https://mirrors.aliyun.com/pypi/simple --trusted-host mirrors.aliyun.com modelscope huggingface 'huggingface_hub<1.0' 'funasr>=1.1.3' 'numpy<=1.26.4' 'transformers<5'", description = "Install SenseVoice/FunASR CUDA dependencies" }
+add-subtitle = { cmd = "python scripts/add_subtitle.py", description = "mp4 -> WAV -> ASR SRT -> Chinese SRT -> publish" }
+gen-subtitle-task = { cmd = "python scripts/gen_subtitle_task.py", description = "Generate data/tasks/*.toml from mp4 files" }
+run-subtitle-task = { cmd = "python scripts/run_subtitle_task.py", description = "Process a subtitle task TOML" }
+cron-subtitle-batch = { cmd = "python scripts/cron_subtitle_batch.py", description = "Generate and run the default subtitle batch" }
+publish-vr-srt = { cmd = "python scripts/publish_vr_srt.py", description = "Copy generated SRT files next to source mp4" }
+sync-vr-audio = { cmd = "python scripts/sync_vr_audio.py", description = "Extract local WAV cache from VR mp4 files" }
+subtitle-pipeline = { cmd = "python scripts/subtitle_pipeline.py", description = "Run ASR/ZH SRT generation for audio clips" }
+test = { cmd = "python test/test_vr_subtitle_smoke.py", description = "No-GPU smoke tests" }
