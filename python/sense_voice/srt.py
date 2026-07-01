@@ -20,6 +20,7 @@ MODAL_END_CHARS = "呢吗啊吧了呀嘛"
 DEFAULT_MAX_SRT_WEIGHT = 18.0
 # None = do not split display lines by duration (segment timing already bounds entries).
 DEFAULT_MAX_SRT_DURATION: float | None = None
+MAX_FRAGMENT_MERGE_GAP = 1.0
 
 
 def calc_weighted_length(text: str) -> float:
@@ -77,6 +78,15 @@ def _is_tiny_tail_fragment(text: str) -> bool:
   if stripped[-1] in STRONG_BREAK_CHARS:
     return False
   return True
+
+
+def _can_merge_fragment(prev: SrtEntry, current: SrtEntry, *, max_gap: float = MAX_FRAGMENT_MERGE_GAP) -> bool:
+  """Only merge display fragments that are temporally adjacent."""
+  _prev_start, prev_end, _prev_text = prev
+  start, end, _text = current
+  if end <= start:
+    return False
+  return start - prev_end <= max_gap
 
 
 def _find_best_split_index(text: str, max_weight: float, *, soft_overflow: float = 8.0) -> int | None:
@@ -156,14 +166,18 @@ def _merge_fragment_entries(entries: list[SrtEntry]) -> list[SrtEntry]:
 
   merged: list[SrtEntry] = []
   for start, end, text in entries:
-    if merged and (_is_fragment_text(text) or _is_tiny_tail_fragment(text)):
+    if (
+      merged
+      and (_is_fragment_text(text) or _is_tiny_tail_fragment(text))
+      and _can_merge_fragment(merged[-1], (start, end, text))
+    ):
       prev_start, prev_end, prev_text = merged[-1]
       merged[-1] = (prev_start, max(prev_end, end), prev_text + text)
       continue
     if not merged and _is_fragment_text(text):
       merged.append((start, end, text))
       continue
-    if merged and _is_fragment_text(merged[-1][2]):
+    if merged and _is_fragment_text(merged[-1][2]) and _can_merge_fragment(merged[-1], (start, end, text)):
       prev_start, prev_end, prev_text = merged[-1]
       merged[-1] = (prev_start, end, prev_text + text)
       continue
@@ -305,6 +319,18 @@ def _split_entry_proportionally(
   return entries
 
 
+def _cap_entry_duration(start: float, end: float, text: str, max_duration: float | None) -> SrtEntry:
+  if max_duration is None or end - start <= max_duration:
+    return (start, end, text)
+  return (start, min(end, start + max_duration), text)
+
+
+def _cap_entries_duration(entries: list[SrtEntry], max_duration: float | None) -> list[SrtEntry]:
+  if max_duration is None:
+    return entries
+  return [_cap_entry_duration(start, end, text, max_duration) for start, end, text in entries]
+
+
 def split_entry_by_words(
   start: float,
   end: float,
@@ -324,12 +350,12 @@ def split_entry_by_words(
   range_words = _words_in_range(words, start, end)
   chunks = _split_text_chunks(text, max_weight)
   if len(chunks) <= 1:
-    return [(start, end, text)]
+    return [_cap_entry_duration(start, end, text, max_duration)]
 
   align_text = timing_text if timing_text is not None else text
   cross_language = timing_text is not None and timing_text.strip() != text.strip()
   if cross_language:
-    return _merge_fragment_entries(_split_entry_proportionally(start, end, chunks))
+    return _cap_entries_duration(_merge_fragment_entries(_split_entry_proportionally(start, end, chunks)), max_duration)
 
   entries: list[SrtEntry] = []
   last_end = start
@@ -345,7 +371,7 @@ def split_entry_by_words(
   if entries:
     entries[0] = (start, entries[0][1], entries[0][2])
     entries[-1] = (entries[-1][0], end, entries[-1][2])
-  return _merge_fragment_entries(entries)
+  return _cap_entries_duration(_merge_fragment_entries(entries), max_duration)
 
 
 def split_entries_for_display(
@@ -370,7 +396,7 @@ def split_entries_for_display(
         max_duration=max_duration,
       )
     )
-  return _attach_leading_punctuation(_merge_fragment_entries(output))
+  return _cap_entries_duration(_attach_leading_punctuation(_merge_fragment_entries(output)), max_duration)
 
 
 def segments_to_entries(segments: list[dict[str, Any]]) -> list[SrtEntry]:

@@ -8,12 +8,13 @@ import shutil
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "python"))
+from _paths import PROJECT_ROOT, add_main_paths
+
+add_main_paths()
 
 from sense_voice.vr_sources import finished_dir, resolve_jav_root, video_from_local_stem  # noqa: E402
 
-DEFAULT_SRT_DIR = ROOT / "results" / "srt"
+DEFAULT_SRT_DIR = PROJECT_ROOT / "results" / "srt"
 
 
 def publish_srt(
@@ -21,18 +22,16 @@ def publish_srt(
     srt_dir: Path,
     *,
     srt_stem: str,
-    kinds: tuple[str, ...] = ("asr", "zh"),
+    kinds: tuple[str, ...] = ("zh",),
 ) -> list[Path]:
     if not video_path.is_file():
         raise FileNotFoundError(f"video not found: {video_path}")
-    dest_dir = video_path.parent
-    dest_stem = video_path.stem
     written: list[Path] = []
     for kind in kinds:
         src = srt_dir / f"{srt_stem}.{kind}.srt"
         if not src.is_file():
             raise FileNotFoundError(f"SRT not found: {src}")
-        dest = dest_dir / f"{dest_stem}.{kind}.srt"
+        dest = video_path.parent / f"{video_path.stem}.{kind}.srt"
         shutil.copyfile(src, dest)
         written.append(dest)
         print(dest)
@@ -40,13 +39,13 @@ def publish_srt(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Publish SRT next to VR video on NFS (/mnt/fnos/jav)")
+    parser = argparse.ArgumentParser(description="Publish SRT next to VR video on NFS")
     parser.add_argument("--video", type=Path, default=None, help="Source video mp4")
-    parser.add_argument("--stem", type=str, default=None, help="Local wav/srt stem under --srt-dir (finds mp4 on #finished)")
+    parser.add_argument("--stem", type=str, default=None, help="Local wav/srt stem under --srt-dir")
     parser.add_argument("--mount", action="store_true", help="Mount gvfs jav if /mnt/fnos/jav missing")
-    parser.add_argument("--srt-stem", type=str, default=None, help="Stem under --srt-dir (default: video stem or --stem)")
+    parser.add_argument("--srt-stem", type=str, default=None, help="Stem under --srt-dir")
     parser.add_argument("--srt-dir", type=Path, default=DEFAULT_SRT_DIR)
-    parser.add_argument("--kinds", default="asr,zh", help="Comma-separated: asr, zh")
+    parser.add_argument("--kinds", default="zh", help="Comma-separated: asr, zh")
     args = parser.parse_args()
 
     kinds = tuple(k.strip() for k in args.kinds.split(",") if k.strip())
@@ -54,12 +53,7 @@ def main() -> None:
         raise SystemExit("No SRT kinds selected")
 
     if args.video is not None:
-        publish_srt(
-            args.video,
-            args.srt_dir,
-            srt_stem=args.srt_stem or args.video.stem,
-            kinds=kinds,
-        )
+        publish_srt(args.video, args.srt_dir, srt_stem=args.srt_stem or args.video.stem, kinds=kinds)
         return
 
     if args.stem:
@@ -74,4 +68,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

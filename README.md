@@ -29,7 +29,7 @@ Mac 上请 `git checkout mac`；`main` 上的 cpp/Metal 辅助脚本已归档到
 | `python/sense_voice/` | 库：ASR、音频、LLM、SRT、字幕、转写 |
 | `scripts/` | 扁平 CLI 入口（见 [`scripts/README.md`](scripts/README.md)） |
 | `scripts/tests/` | 无 GPU 冒烟测试 |
-| `tasks/` | 字幕批量任务 `*.toml`（`gen-subtitle-task` 生成） |
+| `tasks/` | 字幕批量任务 `*.toml`（本地生成，不进 Git） |
 | `data/` | 本地音频：`data/vr`（VR）、`data/recording`（录音/电话） |
 | `results/` | 字幕 / 转写运行产物（**本地 only**，不进 Git） |
 | `benchmark/` | LLM benchmark 脚本与报告（**本地 only**，不进 Git） |
@@ -88,7 +88,7 @@ pixi run vr-subtitle-test -- \
   --language ja
 ```
 
-产物路径见 [`results/README.md`](results/README.md)。详细流程见 [`.agent/TODO-subtitle.md`](.agent/TODO-subtitle.md)。
+产物默认写到本地 `results/`（不进 Git）。详细流程见 [`.agent/TODO-subtitle.md`](.agent/TODO-subtitle.md)。
 
 ## 转写线（Transcript）
 
@@ -100,45 +100,6 @@ pixi run transcript-test -- \
   --report results/transcript/geng_ruixiang_p1_metrics.md \
   --asr-backend official --asr-device cuda:0
 ```
-
-## 本地 LLM Benchmark
-
-Benchmark 会执行：SenseVoice ASR → 结构化时间线 → 本地 Ollama 润色 → 翻译 → 质量自评。
-
-```bash
-pixi run benchmark -- \
-  --asr-backend official \
-  --asr-device cuda:0 \
-  --model qwen3.5:latest \
-  --language zh
-```
-
-VR 样例（保留时间轴，不改成散文）：
-
-```bash
-pixi run extract-audio -- \
-  /path/to/KAVR-or-other-vr-file.mp4 \
-  data/vr/vr_sample.wav \
-  --duration 180
-
-pixi run benchmark -- \
-  --clip data/vr/vr_sample.wav \
-  --report benchmark/reports/vr_audio_benchmark.md \
-  --asr-backend official \
-  --asr-device cuda:0 \
-  --model nsfw-local:27b \
-  --profile vr \
-  --language ja \
-  --chunk-chars 1200
-```
-
-**翻译模型对比**（输入已有 `.asr.srt`，对比 `nsfw-local:27b` vs `huihui_ai/qwen3.5-abliterated:27b`）：
-
-```bash
-pixi run python benchmark/benchmark_translate_llm.py
-```
-
-benchmark 代码、数据和结论都在 [`benchmark/`](benchmark/)。
 
 ## 冒烟测试
 

@@ -50,7 +50,7 @@
 | `subtitle.py` | 拆句、refine、润色后重对齐 |
 | `srt.py` | SRT 读写、显示行切分 |
 | `scripts/vr_subtitle_test.py` | VR/KAVR 字幕测试入口（主验收） |
-| `benchmark/benchmark_voice_llm.py` | `vr` / `subtitle` profile，完整 LLM benchmark |
+| `benchmark/benchmark_voice_llm.py` | `vr` / `subtitle` profile，完整 LLM benchmark（本地 only） |
 | `TODO-subtitle.md` | 字幕线待办 |
 
 ### 3. Transcript — 转写 / polish
@@ -84,9 +84,9 @@
 | Task | 产品线 | 说明 |
 |------|--------|------|
 | `pixi run sv` | Core | 纯 ASR |
+| `pixi run add-subtitle` | Subtitle | NFS mp4 → SRT → 回写 |
 | `pixi run vr-subtitle-test` | Subtitle | SRT + 指标（主验收） |
 | `pixi run transcript-test` | Transcript | 说话人转写 + polish |
-| `pixi run benchmark` | Benchmark | LLM 长报告，可带 `--srt-dir` |
 
 ## 仓库结构
 
@@ -96,7 +96,8 @@ scripts/              扁平 CLI 入口（见 scripts/README.md）
 scripts/tests/        无 GPU 冒烟测试
 data/                 本地音频（data/vr、data/recording）
 results/              字幕 / 转写运行产物（本地 only，不进 Git）
-benchmark/            LLM benchmark 脚本与报告（本地 only，不进 Git）
+benchmark/            LLM benchmark（本地 only，不进 Git）
+tasks/                批量 task.toml（本地 only，不进 Git）
 .agent/               架构、规范、分轨 TODO（Agent 文档）
 docs/                 技术备忘（非 Agent 入口）
 archive/              已归档实验（pyannote / mac-cpp / vad）

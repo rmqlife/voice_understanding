@@ -66,26 +66,58 @@ def stop_all_ollama_models(extra: list[str] | None = None) -> None:
     stop_ollama_models(sorted(names))
 
 
-def ollama_generate(model: str, prompt: str) -> tuple[str, float]:
-    payload = json.dumps(
-        {
-            "model": model,
-            "prompt": prompt,
-            "stream": False,
-            "think": False,
-        }
-    ).encode("utf-8")
+# 27B on 24 GiB is tight once CUDA graphs allocate; keep ctx/batch conservative.
+DEFAULT_OLLAMA_OPTIONS: dict[str, int] = {"num_ctx": 3072, "num_batch": 128}
+OLLAMA_RETRY_OPTIONS: dict[str, int] = {"num_ctx": 2048, "num_batch": 64}
+
+
+def ollama_generate(
+    model: str,
+    prompt: str,
+    *,
+    options: dict[str, int] | None = None,
+    max_retries: int = 2,
+) -> tuple[str, float]:
+    opts = dict(DEFAULT_OLLAMA_OPTIONS)
+    if options:
+        opts.update(options)
     start = time.perf_counter()
-    req = urllib.request.Request(
-        "http://127.0.0.1:11434/api/generate",
-        data=payload,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=600) as resp:
-        body = json.loads(resp.read().decode("utf-8"))
-    elapsed = time.perf_counter() - start
-    return body.get("response", "").strip(), elapsed
+    last_error: urllib.error.HTTPError | None = None
+    for attempt in range(max_retries + 1):
+        payload = json.dumps(
+            {
+                "model": model,
+                "prompt": prompt,
+                "stream": False,
+                "think": False,
+                "options": opts,
+            }
+        ).encode("utf-8")
+        req = urllib.request.Request(
+            "http://127.0.0.1:11434/api/generate",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=600) as resp:
+                body = json.loads(resp.read().decode("utf-8"))
+            elapsed = time.perf_counter() - start
+            return body.get("response", "").strip(), elapsed
+        except urllib.error.HTTPError as exc:
+            last_error = exc
+            if exc.code != 500 or attempt >= max_retries:
+                raise
+            print(
+                f"ollama: HTTP 500 ({exc.reason}); unload and retry "
+                f"{attempt + 1}/{max_retries} with num_ctx={OLLAMA_RETRY_OPTIONS['num_ctx']}",
+                flush=True,
+            )
+            stop_ollama_models([model])
+            time.sleep(8)
+            opts = dict(OLLAMA_RETRY_OPTIONS)
+    assert last_error is not None
+    raise last_error
 
 
 def chunk_segments(

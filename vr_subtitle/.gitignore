@@ -1,0 +1,17 @@
+data/vr/*
+!data/vr/.gitkeep
+results/*
+!results/.gitkeep
+!results/srt/
+results/srt/*
+!results/srt/.gitkeep
+!results/subtitle/
+!results/subtitle/logs/
+results/subtitle/logs/*
+!results/subtitle/logs/.gitkeep
+tasks/*
+!tasks/.gitkeep
+.pixi/
+__pycache__/
+*/__pycache__/
+*.pyc

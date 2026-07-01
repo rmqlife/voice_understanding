@@ -19,6 +19,8 @@ fbank_lfr_cmvn_feature.json
 reference/
 # Legacy vendored path (only on mac branch); ignore if present after checkout
 SenseVoice.cpp/
-# Local run outputs and benchmarks — not versioned
+# Local run outputs, benchmarks, and machine-specific task lists — not versioned
 results/
 benchmark/
+tasks/*.toml
+!tasks/.gitkeep

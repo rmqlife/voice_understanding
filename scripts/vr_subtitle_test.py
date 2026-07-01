@@ -99,6 +99,7 @@ def process_clip(
     asr_backend: str,
     asr_device: str | None,
     asr_model: str | None,
+    asr_chunk_seconds: float | None,
     polish_model: str,
     chunk_chars: int,
     chunk_segments_size: int,
@@ -140,6 +141,7 @@ def process_clip(
             backend=asr_backend,
             device=asr_device,
             model=asr_model,
+            chunk_seconds=asr_chunk_seconds,
         )
         audio_seconds = (
             float(result_audio_seconds)
@@ -320,6 +322,7 @@ def main() -> None:
     parser.add_argument("--asr-backend", choices=["cpp", "official"], default="official")
     parser.add_argument("--asr-device", default=None)
     parser.add_argument("--asr-model", default=None)
+    parser.add_argument("--asr-chunk-seconds", type=float, default=0, help="Official backend chunk length; 0 disables chunking")
     parser.add_argument("--polish-model", default="nsfw-local:27b")
     parser.add_argument("--chunk-chars", type=int, default=3000, help="Legacy char chunk size (unused when segment chunking is active)")
     parser.add_argument("--chunk-segments", type=int, default=80, help="Max ASR segments per LLM polish call")
@@ -406,6 +409,7 @@ def main() -> None:
                     asr_backend=args.asr_backend,
                     asr_device=args.asr_device,
                     asr_model=args.asr_model,
+                    asr_chunk_seconds=args.asr_chunk_seconds,
                     polish_model=args.polish_model,
                     chunk_chars=args.chunk_chars,
                     chunk_segments_size=args.chunk_segments,

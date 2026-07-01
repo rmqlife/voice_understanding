@@ -28,13 +28,6 @@ publish-vr-srt = { cmd = "python scripts/publish_vr_srt.py", description = "Copy
 transcript-test = { cmd = "python scripts/transcript_test.py", description = "Speaker diarization + transcript md/json export" }
 download-transcript-models = { cmd = "python scripts/download_transcript_models.py", description = "Pre-download FunASR models for transcript" }
 
-# Benchmark (code + data + conclusions live under benchmark/)
-benchmark = { cmd = "python benchmark/benchmark_voice_llm.py", description = "Run voice + local LLM benchmark" }
-
-# Sync with mag
-sync-vr-audio = { cmd = "python scripts/sync_vr_audio.py", description = "Extract WAV from NFS/gvfs VR video via ffmpeg" }
-sync-results-from-mag = { cmd = "bash scripts/sync_from_mag.sh", description = "Rsync results/ from rmqlife-mag" }
-
 # No-GPU smoke tests
 test = { cmd = "python scripts/tests/test_transcribe.py", description = "Run sample transcription" }
 test-srt = { cmd = "python scripts/tests/test_srt_smoke.py", description = "Smoke tests for SRT split and timestamps (no GPU)" }

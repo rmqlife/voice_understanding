@@ -11,6 +11,7 @@
 | `scripts/` | CLI 入口（扁平，见 [`scripts/README.md`](scripts/README.md)） |
 | `scripts/tests/` | 无 GPU 冒烟测试 |
 | `data/` | 本地音频（`vr` / `recording`） |
+| `tasks/` | 批量任务 `*.toml`（本地 only，不进 Git） |
 | `results/` | 字幕 / 转写运行产物（本地 only，不进 Git） |
 | `benchmark/` | LLM benchmark 脚本与报告（本地 only，不进 Git） |
 | `docs/` | 技术备忘（非 Agent 入口） |

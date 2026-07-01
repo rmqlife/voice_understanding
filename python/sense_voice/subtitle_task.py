@@ -21,6 +21,7 @@ class SubtitleDefaults:
     asr_backend: str = "official"
     asr_device: str = "cuda:0"
     asr_model: str | None = None
+    asr_chunk_seconds: float | None = 0
     polish_model: str = "nsfw-local:27b"
     chunk_chars: int = 3000
     chunk_segments: int = 80
@@ -31,6 +32,7 @@ class SubtitleDefaults:
     wav_dir: str = "data/vr"
     srt_dir: str = "results/srt"
     mount: bool = False
+    finished_root: str = ""
 
 
 @dataclass
@@ -76,6 +78,7 @@ def write_subtitle_task(path: Path, task: SubtitleTask) -> None:
         f"asr_backend = {_toml_str(defaults.asr_backend)}",
         f"asr_device = {_toml_str(defaults.asr_device)}",
         f"asr_model = {_toml_str(defaults.asr_model)}",
+        f"asr_chunk_seconds = {defaults.asr_chunk_seconds if defaults.asr_chunk_seconds is not None else 0}",
         f"polish_model = {_toml_str(defaults.polish_model)}",
         f"chunk_chars = {defaults.chunk_chars}",
         f"chunk_segments = {defaults.chunk_segments}",
@@ -86,6 +89,7 @@ def write_subtitle_task(path: Path, task: SubtitleTask) -> None:
         f"wav_dir = {_toml_str(defaults.wav_dir)}",
         f"srt_dir = {_toml_str(defaults.srt_dir)}",
         f"mount = {_toml_bool(defaults.mount)}",
+        f"finished_root = {_toml_str(defaults.finished_root)}",
         "",
     ]
     for video in task.videos:
@@ -136,6 +140,9 @@ def _coerce_defaults(raw: dict[str, Any]) -> dict[str, Any]:
     out: dict[str, Any] = {}
     for key, value in raw.items():
         if key in fields:
+            if key == "asr_chunk_seconds" and value in {"", None}:
+                out[key] = None
+                continue
             out[key] = value
     return out
 

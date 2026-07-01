@@ -45,8 +45,9 @@ git push origin main
 | `*.wav`、`*.aac`、大部分 `*.mp3` | 大媒体文件 |
 | `results/` | 字幕 / 转写运行产物（SRT、指标、日志） |
 | `benchmark/` | LLM benchmark 脚本与报告 |
+| `tasks/*.toml` | 机器相关的批量任务列表 |
 
-`results/`、`benchmark/` 整目录不进 Git；产物留在本机，多机用 `sync-results-from-mag` 或各自本地跑。
+`results/`、`benchmark/`、`tasks/*.toml` 整目录或文件不进 Git；产物留在本机各自生成。
 
 ## pull 时有本地未提交改动
 

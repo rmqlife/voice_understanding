@@ -15,9 +15,10 @@ from .llm import stop_all_ollama_models
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_LOCK_PATH = REPO_ROOT / "data" / ".subtitle_gpu.lock"
 
-# FunASR official + VAD needs headroom; 27B Ollama needs ~20 GiB.
+# FunASR official + VAD needs headroom; 27B Ollama needs ~20 GiB loaded plus graph headroom.
 ASR_MIN_FREE_MIB = 6_000
-OLLAMA_MIN_FREE_MIB = 18_000
+OLLAMA_MIN_FREE_MIB = 20_000
+OLLAMA_SETTLE_SEC = 3.0
 GPU_WAIT_TIMEOUT_SEC = 180.0
 GPU_POLL_INTERVAL_SEC = 2.0
 
@@ -88,6 +89,8 @@ def prepare_gpu_for_ollama(*, device: str | None) -> None:
         return
     print("gpu: wait for VRAM after ASR", flush=True)
     wait_for_gpu_free(min_free_mib=OLLAMA_MIN_FREE_MIB, label="Ollama")
+    if OLLAMA_SETTLE_SEC > 0:
+        time.sleep(OLLAMA_SETTLE_SEC)
 
 
 def release_gpu_after_polish(polish_model: str | None) -> None:

@@ -13,17 +13,6 @@ DEFAULT_NFS_SHARE = "jav"
 DEFAULT_MOUNT_ROOT = Path("/mnt/fnos/jav")
 FINISHED_SUBDIR = "#finished"
 
-LEGACY_PRESETS = {
-    "kavr500_part2": (
-        f"{DEFAULT_MOUNT_ROOT}/#finished/"
-        "KAVR-5008K/489155.com@KAVR-500.PART2_8K.mp4"
-    ),
-    "kavr500_part3": (
-        f"{DEFAULT_MOUNT_ROOT}/#finished/"
-        "KAVR-5008K/489155.com@KAVR-500.PART3_8K.mp4"
-    ),
-}
-
 NON_VR_MARKERS = ("Blacked.", "blacked.")
 # Studio / filename must indicate VR (not flat JAV like MANX/NMSL/URE).
 VR_STUDIO_MARKERS = (
@@ -121,6 +110,8 @@ def is_vr_mp4(path: Path) -> bool:
     if any(marker in name for marker in NON_VR_MARKERS):
         return False
     upper = name.upper()
+    if re.match(r"^[A-Z0-9]+VR[A-Z0-9]*-\d+", upper):
+        return True
     if any(marker in upper for marker in VR_STUDIO_MARKERS):
         return True
     if any(marker in name for marker in VR_TECH_MARKERS):

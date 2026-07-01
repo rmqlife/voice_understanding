@@ -22,10 +22,12 @@ def run_asr(
     backend: str,
     device: str | None = None,
     model: str | None = None,
+    chunk_seconds: float | None = None,
     repo_root: Path = REPO_ROOT,
     sv_script: Path = SV_SCRIPT,
 ) -> tuple[str, str, float | None, float, str, dict[str, object]]:
     """Return (text, raw, audio_seconds, wall_seconds, stderr, json_payload)."""
+    audio = Path(audio).expanduser().resolve()
     cmd = [
         "pixi",
         "run",
@@ -44,6 +46,8 @@ def run_asr(
         cmd.extend(["--device", device])
     if model:
         cmd.extend(["--model", model])
+    if chunk_seconds is not None:
+        cmd.extend(["--chunk-seconds", str(chunk_seconds)])
 
     start = time.perf_counter()
     proc = subprocess.run(
